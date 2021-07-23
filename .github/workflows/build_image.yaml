@@ -1,0 +1,37 @@
+name: deploy-prod
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+
+   deploy:
+    runs-on: [self-hosted, linux, x64,ali,build]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: run package
+        run:  mvn  clean package -Dmaven.test.skip=true
+        env:
+          GITHUB_TOKEN: ${{ secrets.MAVEN_TOKEN }}
+
+
+      - name: mkdir
+        run: mkdir artifacts
+
+      - name: build files
+        working-directory: artifacts
+        run: |
+          mv ../Dockerfile-prod Dockerfile && \
+          mv ../app.yaml . && \
+          mv ../target/alma-server-0.0.1-SNAPSHOT.jar alma.jar
+          echo ${GITHUB_REF##*/}-$(git rev-parse --short $GITHUB_SHA) >> version.conf
+
+      - name: build image
+        working-directory: artifacts
+        run: eru-cli --eru eru-core.ali.wormhole.tube:5001 image build --tag $(cat version.conf)  --raw  --name alma .
+
+      - name: deploy image
+        working-directory: artifacts
+        run:  eru-cli --eru eru-core.ali.wormhole.tube:5001 workload deploy --pod main --image registry.cn-hongkong.aliyuncs.com/wormholestudio/alma:$(cat version.conf) --entry prod --count 2  --auto-replace  --network host app.yaml
