@@ -1,26 +1,25 @@
-name: deploy-prod
+name: build_image
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
-
-   deploy:
-    runs-on: ubuntu-latest
-
-
+  publish:
+    runs-on: ubuntu-latest 
+    permissions: 
+      contents: read
+      packages: write 
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Maven 3
-        uses: aahmed-se/setup-maven@v3
-      
-      - name: run package
-        run:  mvn  clean package -Dmaven.test.skip=true
+      - name: Set up Java for publishing to GitHub Packages
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - name: Publish package
+        run: mvn --batch-mode deploy -Dmaven.test.skip=true 
         env:
           GITHUB_TOKEN: ${{ secrets.MAVEN_TOKEN }}
-
-
-      - name: mkdir
-        run: mkdir artifacts
-
