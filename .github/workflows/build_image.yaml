@@ -22,4 +22,4 @@ jobs:
       - name: Publish package
         run: mvn package
         env:
-          GITHUB_TOKEN: ${{ secrets.MAVEN_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
