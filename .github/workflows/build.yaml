@@ -24,7 +24,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: build files
-        working-directory: artifacts
+        working-directory: target
         run: |
           mv quark-1.0-SNAPSHOT.jar quark.jar
 
