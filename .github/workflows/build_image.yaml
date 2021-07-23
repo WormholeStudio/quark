@@ -23,3 +23,7 @@ jobs:
         run: mvn package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: quark.jar
+          path: /target/quark-1.0-SNAPSHOT.jar
