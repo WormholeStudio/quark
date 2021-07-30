@@ -32,10 +32,10 @@ public class Deploy implements Callable<Integer> {
   private ChainService chainService;
   @Option(names = {"--private", "-p"}, description = "private key", required = true)
   String privateKeyStr;
-  @Option(names = {"--address", "-a"}, description = "private key", required = true)
+  @Option(names = {"--address", "-a"}, description = "address", required = true)
   String address;
   @Option(names = {"--chain",
-      "-c"}, description = "chain id :localhost=0 ,main=1 ,barnard=251", defaultValue = "0", required = true)
+      "-c"}, description = "chain id :localhost=254 ,main=1 ,barnard=251", defaultValue = "0", required = true)
   int chainId;
   @Option(names = {"--store",
       "-s"}, description = "project  path ,default is current ", required = false)
