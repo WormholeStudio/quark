@@ -3,14 +3,21 @@ package studio.wormhole.quark.helper;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.novi.serde.Bytes;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -27,11 +34,14 @@ import org.starcoin.types.Module;
 import org.starcoin.types.RawUserTransaction;
 import org.starcoin.types.SignedUserTransaction;
 import org.starcoin.types.TransactionPayload;
+import org.starcoin.types.TransactionPayload.ScriptFunction;
 import org.starcoin.utils.AccountAddressUtils;
+import org.starcoin.utils.AuthenticationKeyUtils;
+import org.starcoin.utils.BcsSerializeHelper;
 import org.starcoin.utils.ChainInfo;
 import org.starcoin.utils.Hex;
+import org.starcoin.utils.Scheme;
 import org.starcoin.utils.SignatureUtils;
-import org.starcoin.utils.StarcoinClient;
 
 public class QuarkClient {
 
@@ -48,8 +58,13 @@ public class QuarkClient {
     this.chainId = chainInfo.getChainId();
   }
 
+  public QuarkClient(String baseUrl, int chainId) {
+    this.baseUrl = baseUrl;
+    this.chainId = chainId;
+  }
+
   @SneakyThrows
-  private String call(String method, List<String> params) {
+  private String call(String method, List<Object> params) {
     JSONObject jsonBody = new JSONObject();
     jsonBody.put("jsonrpc", "2.0");
     jsonBody.put("method", method);
@@ -63,21 +78,32 @@ public class QuarkClient {
 
   @SneakyThrows
   //  @TODO 链上改了返回结构以后要修改
-  public AccountResource getAccountSequence(AccountAddress sender) {
+  public Optional<AccountResource> getAccountSequence(AccountAddress sender) {
     String path = AccountAddressUtils.hex(
         sender) + "/1/0x00000000000000000000000000000001::Account::Account";
     String rst = call("state.get", Lists.newArrayList(path));
     JSONObject jsonObject = JSON.parseObject(rst);
+    if (jsonObject.get("result") == null) {
+      return Optional.empty();
+    }
     List<Byte> result = jsonObject
         .getJSONArray("result")
         .toJavaList(Byte.class);
     Byte[] bytes = result.toArray(new Byte[0]);
-    return AccountResource.bcsDeserialize(ArrayUtils.toPrimitive(bytes));
+    return Optional.of(AccountResource.bcsDeserialize(ArrayUtils.toPrimitive(bytes)));
   }
 
 
   public String getTransactionInfo(String txn) {
     return call("chain.get_transaction_info", Lists.newArrayList(txn));
+  }
+
+  public String callScriptFunction(AccountAddress sender, Ed25519PrivateKey privateKey,
+      ScriptFunctionObj scriptFunctionObj) {
+    ScriptFunction scriptFunction = new ScriptFunction(scriptFunctionObj.toScriptFunction());
+    RawUserTransaction rawUserTransaction = buildRawUserTransaction(sender, scriptFunction, null);
+    String rst = submitHexTransaction(privateKey, rawUserTransaction);
+    return rst;
   }
 
 
@@ -99,11 +125,39 @@ public class QuarkClient {
   }
 
   @SneakyThrows
+  public String batchDeployContractPackage(AccountAddress sender, Ed25519PrivateKey privateKey,
+      List<MoveFile> filePathList, ScriptFunctionObj initScriptObj) {
+    org.starcoin.types.ScriptFunction sf =
+        Objects.isNull(initScriptObj) ? null : initScriptObj.toScriptFunction();
+
+    List<Module> moduleList = filePathList.stream().map(file -> {
+      byte[] contractBytes = new byte[0];
+      try {
+        contractBytes = Files.toByteArray(new File(file.getMvFilePath()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      Module module = new Module(new Bytes(contractBytes));
+      return module;
+    }).collect(Collectors.toList());
+    org.starcoin.types.Package contractPackage = new org.starcoin.types.Package(sender,
+        moduleList,
+        Optional.ofNullable(sf));
+    TransactionPayload.Package.Builder builder = new TransactionPayload.Package.Builder();
+    builder.value = contractPackage;
+    TransactionPayload payload = builder.build();
+
+    Optional<AccountResource> accountResource = getAccountSequence(sender);
+    long seqNumber = accountResource.isPresent() ? accountResource.get().sequence_number : 1L;
+    return submitTransaction(sender, privateKey, payload, seqNumber);
+  }
+
+  @SneakyThrows
   public String submitHexTransaction(Ed25519PrivateKey privateKey,
       RawUserTransaction rawUserTransaction) {
     SignedUserTransaction signedUserTransaction = SignatureUtils.signTxn(privateKey,
         rawUserTransaction);
-    List<String> params = Lists.newArrayList(Hex.encode(signedUserTransaction.bcsSerialize()));
+    List<Object> params = Lists.newArrayList(Hex.encode(signedUserTransaction.bcsSerialize()));
     return call("txpool.submit_hex_transaction", params);
   }
 
@@ -117,19 +171,32 @@ public class QuarkClient {
       TransactionPayload payload, Long seqNumber) {
     try {
       if (seqNumber == null) {
-        AccountResource accountResource = getAccountSequence(sender);
-        seqNumber = accountResource.sequence_number;
+        Optional<AccountResource> accountResource = getAccountSequence(sender);
+        if (accountResource.isPresent()) {
+          seqNumber = accountResource.get().sequence_number;
+        } else {
+          seqNumber = 1L;
+        }
+
       }
       ChainId chainId = new ChainId((byte) this.chainId);
+      long ts = System.currentTimeMillis() / 1000L;
+      if (this.chainId == 254) {
+        ts = 1;
+      }
       RawUserTransaction rawUserTransaction = new RawUserTransaction(sender, seqNumber.longValue(),
           payload,
           10000000L, 1L, "0x1::STC::STC",
-          System.currentTimeMillis() / 1000L + TimeUnit.HOURS.toSeconds(1L), chainId);
+          ts + TimeUnit.HOURS.toSeconds(1L), chainId);
       return rawUserTransaction;
     } catch (Throwable var8) {
       throw var8;
     }
   }
 
+
+  public String resolveFunction(ScriptFunctionObj function) {
+    return call("contract.resolve_function", Lists.newArrayList(function.toRPCString()));
+  }
 
 }
