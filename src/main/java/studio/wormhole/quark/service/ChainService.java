@@ -2,7 +2,6 @@ package studio.wormhole.quark.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -70,9 +69,9 @@ public class ChainService {
 
 
   private ChainInfo chainInfo(int chainId) {
-    if (chainId == 1) {
-      throw new RuntimeException("don't use this tool on main chain");
-    }
+//    if (chainId == 1) {
+//      throw new RuntimeException("don't use this tool on main chain");
+//    }
     ChainInfo chainInfo = Arrays.stream(ChainInfo.values()).filter(s -> s.getChainId() == chainId)
         .findFirst().get();
     return chainInfo;

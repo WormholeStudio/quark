@@ -43,6 +43,31 @@
       <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.bitcoinj/bitcoinj-core -->
+    <dependency>
+      <groupId>org.bitcoinj</groupId>
+      <artifactId>bitcoinj-core</artifactId>
+      <version>0.15.10</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-dynamodb</artifactId>
+      <version>1.12.36</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
   <repositories>
     <repository>

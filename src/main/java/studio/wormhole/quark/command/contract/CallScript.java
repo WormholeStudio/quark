@@ -3,7 +3,6 @@ package studio.wormhole.quark.command.contract;
 import com.alibaba.fastjson.JSON;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.Callable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,6 @@ import org.starcoin.utils.Scheme;
 import org.starcoin.utils.SignatureUtils;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import studio.wormhole.quark.command.BaseCommand;
 import studio.wormhole.quark.service.ChainService;
 
 @Component
@@ -66,8 +64,8 @@ public class CallScript implements Callable<Integer> {
         )
         .build();
 
-   String rst =  chainService.resolveFunction(chainId, scriptFunctionObj);
-   JSON obj =JSON.parseObject(rst);
+    String rst = chainService.resolveFunction(chainId, scriptFunctionObj);
+    JSON obj = JSON.parseObject(rst);
     System.out.println(obj);
 //    chainService.call_function(chainId, pAddress, privateKey, scriptFunctionObj);
     return 1;

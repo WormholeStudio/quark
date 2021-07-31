@@ -9,7 +9,6 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,11 +42,17 @@ public class MovePackageUtil {
         })
         .filter(Objects::nonNull)
         .collect(Collectors.groupingBy(MoveFile::getType));
+    if (moveFilesGroup.get("src").size() != moveFilesGroup.get("storage").size()) {
+      return moveFilesGroup.get("storage").stream()
+          .map(s -> s.toBuilder().mvFilePath(s.srcFilePath).build()).collect(
+              Collectors.toList());
+    }
 
     List<MoveFile> srcFiles = sort(moveFilesGroup.get("src"));
     Map<String, String> mvFilesMap = moveFilesGroup.get("storage").stream()
         .map(s -> Maps.immutableEntry(s.getName(), s.getSrcFilePath()))
         .collect(Collectors.toMap(s -> s.getKey(), s -> s.getValue()));
+
     List<MoveFile> files = srcFiles.stream().map(s -> {
       String mvName = s.getName().replace(".move", ".mv");
       return s.toBuilder().mvFilePath(mvFilesMap.get(mvName)).build();
@@ -75,6 +80,9 @@ public class MovePackageUtil {
   }
 
   private static List<MoveFile> sort(List<MoveFile> graph) {
+    if (graph.size() == 1) {
+      return graph;
+    }
     List<String> order = Lists.newArrayList();
     Map<String, Boolean> visited = Maps.newHashMap();
     for (MoveFile tmp : graph) {
@@ -88,7 +96,7 @@ public class MovePackageUtil {
     return graph.stream().map(f -> {
       int index = order.indexOf(f.getName()) + 1;
       String pre = String.format("%04d", Integer.valueOf(index));
-      String name = f.getName().replace("move", "mv");
+      String name = f.getName().trim().replace("move", "mv");
       return f.toBuilder().orderName(pre + "_" + name).build();
     }).collect(Collectors.toList());
   }
@@ -103,7 +111,11 @@ public class MovePackageUtil {
         if (StringUtils.equalsIgnoreCase(matcher.group(1), "0x1")) {
           return null;
         }
-        return matcher.group(2) + ".move";
+        String deps = matcher.group(2).trim();
+        if (deps.contains("::")) {
+          deps = deps.split("::")[0];
+        }
+        return deps + ".move";
       }
       return null;
     }).filter(Objects::nonNull).collect(Collectors.toList());
