@@ -44,7 +44,7 @@ public class CallScript implements Callable<Integer> {
   private ChainService chainService;
 
   @Override
-  public Integer call() throws Exception {
+  public Integer call() {
     Ed25519PrivateKey privateKey = SignatureUtils.strToPrivateKey(privateKeyStr);
     Ed25519PublicKey publicKey = SignatureUtils.getPublicKey(privateKey);
     String authKey = AuthenticationKeyUtils
