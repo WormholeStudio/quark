@@ -1,10 +1,14 @@
-package studio.wormhole.quark.helper;
+package studio.wormhole.quark.helper.move;
 
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder(toBuilder = true)
 public class MoveFile {
 
@@ -12,7 +16,11 @@ public class MoveFile {
   List<String> depSet;
   String mvFilePath;
   String srcFilePath;
-  String orderName;
   String type;
   List<String> typeList;
+
+  String moduleName;
+  String orderName;
+
+
 }

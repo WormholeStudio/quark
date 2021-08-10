@@ -17,8 +17,8 @@ import org.starcoin.utils.Scheme;
 import org.starcoin.utils.SignatureUtils;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import studio.wormhole.quark.helper.MoveFile;
-import studio.wormhole.quark.helper.MovePackageUtil;
+import studio.wormhole.quark.helper.move.MoveFile;
+import studio.wormhole.quark.helper.move.MovePackageUtil;
 import studio.wormhole.quark.service.ChainService;
 
 @Component

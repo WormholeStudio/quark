@@ -34,6 +34,7 @@ import org.starcoin.utils.AccountAddressUtils;
 import org.starcoin.utils.ChainInfo;
 import org.starcoin.utils.Hex;
 import org.starcoin.utils.SignatureUtils;
+import studio.wormhole.quark.helper.move.MoveFile;
 
 public class QuarkClient {
 

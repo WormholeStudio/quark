@@ -1,11 +1,15 @@
-package studio.wormhole.quark.helper;
+package studio.wormhole.quark.helper.move;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import com.google.common.io.LineProcessor;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,9 +21,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 public class MovePackageUtil {
 
+  private static Pattern p = Pattern.compile("use\\s+(0x[a-f0-9A-F]+?)::([\\x00-\\xff]+?);");
+  private static Pattern m = Pattern.compile("\\s*module\\s+([\"\\w- ]*)\\{");
 
   public static List<MoveFile> prePackageFile(String src) {
     Iterable<File> fileIterable = Files
@@ -34,6 +41,54 @@ public class MovePackageUtil {
           Path path1 = Paths.get(src).resolve(path.getParent());
           List<String> type = Splitter.on("/").omitEmptyStrings()
               .splitToList(path1.toString().replace(src, ""));
+
+          if ("src".equals(type.get(0)) && f.getName().endsWith(".move")) {
+            try {
+              List<MoveFile> files = CharStreams
+                  .readLines(new FileReader(f), new LineProcessor<List<MoveFile>>() {
+
+                    List<MoveFile> rst = Lists.newArrayList();
+
+                    boolean firstModule = false;
+                    boolean moduleStart = false;
+                    List<String> moduleLines;
+
+                    MoveFile moveFile;
+
+                    @Override
+                    public boolean processLine(String line) throws IOException {
+                      Matcher matcher = m.matcher(line);
+                      moduleStart = matcher.find();
+                      if (moduleStart) {
+                        if (!CollectionUtils.isEmpty(moduleLines)) {
+                          rst.add(MoveFile.builder().name(rst.size()+1+"").build());
+                        }
+                        moveFile = new MoveFile();
+                        moveFile.setModuleName(matcher.group(1));
+                        moduleLines = Lists.newArrayList();
+                        System.out.println(line);
+                      }
+                      if (moduleLines != null) {
+                        moduleLines.add(line);
+                      }
+
+                      return true;
+                    }
+
+                    @Override
+                    public List<MoveFile> getResult() {
+                      if (moveFile != null) {
+                        rst.add(MoveFile.builder().name(rst.size() + 1 + "").build());
+                      }
+                      return rst;
+                    }
+                  });
+              System.out.println(files);
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+          }
+
           return MoveFile.builder().name(f.getName())
               .srcFilePath(f.getAbsolutePath())
               .type(type.get(0))
@@ -101,7 +156,6 @@ public class MovePackageUtil {
     }).collect(Collectors.toList());
   }
 
-  private static Pattern p = Pattern.compile("use\\s+(0x[a-f0-9A-F]+?)::([\\x00-\\xff]+?);");
 
   @SneakyThrows
   private static List<String> depSet(File s) {
@@ -119,5 +173,10 @@ public class MovePackageUtil {
       }
       return null;
     }).filter(Objects::nonNull).collect(Collectors.toList());
+  }
+
+
+  public static void main(String[] args) {
+    prePackageFile("/Users/reilost/Dropbox/wormhole/starstar-core");
   }
 }
