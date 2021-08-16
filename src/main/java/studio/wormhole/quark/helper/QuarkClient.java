@@ -99,14 +99,14 @@ public class QuarkClient {
         org.starcoin.types.ScriptFunction sf =
                 Objects.isNull(initScriptObj) ? null : initScriptObj.toScriptFunction();
 
-        List<Module> moduleList = filePathList.stream().map(file -> {
+        List<org.starcoin.types.Module> moduleList = filePathList.stream().map(file -> {
             byte[] contractBytes = new byte[0];
             try {
                 contractBytes = Files.toByteArray(new File(file.getMvFilePath()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Module module = new Module(new Bytes(contractBytes));
+            org.starcoin.types.Module module = new org.starcoin.types.Module(new Bytes(contractBytes));
             return module;
         }).collect(Collectors.toList());
         org.starcoin.types.Package contractPackage = new org.starcoin.types.Package(sender,

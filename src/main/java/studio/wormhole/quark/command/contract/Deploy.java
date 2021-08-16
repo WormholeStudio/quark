@@ -16,6 +16,7 @@ import studio.wormhole.quark.helper.move.MovePackageUtil;
 import studio.wormhole.quark.service.ChainService;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 @Component
@@ -39,6 +40,19 @@ public class Deploy implements Callable<Integer> {
 
     @Option(names = {"--code_address"}, description = "if code address is different from address ,will auto replace and compile ", required = false)
     String replaceAddress;
+
+    @Option(names = {"--function" }, description = "format:  address::module::function_name", required = false)
+    String function;
+
+    @Option(names = {"--type_args" },
+            description = "type_args,format:  address::module::struct_name split with , ",
+            split = ",",
+            required = false)
+    List<String> type_args;
+    @Option(names = {"--args" },
+            description = " args  split with , if array split with whitespace ",
+            split = ",", required = false)
+    List<String> args;
 
 
     @Override
@@ -70,6 +84,10 @@ public class Deploy implements Callable<Integer> {
         chainService.batchDeployContract(projectPath, fileName);
         if (StringUtils.isNotEmpty(replaceAddress)) {
             MovePackageUtil.replaceAddress(projectPath, address, replaceAddress);
+        }
+
+        if (StringUtils.isNotEmpty(function)){
+            chainService.call_function(function, type_args, args);
         }
         return 0;
     }
