@@ -2,11 +2,12 @@ package studio.wormhole.quark.helper;
 
 import com.novi.bcs.BcsSerializer;
 import com.novi.serde.Bytes;
+import lombok.SneakyThrows;
+import org.starcoin.types.AccountAddress;
+
 import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
-import org.starcoin.types.AccountAddress;
 
 public class BcsSerializeHelper {
 
@@ -38,7 +39,7 @@ public class BcsSerializeHelper {
   }
 
   @SneakyThrows
-  public static Bytes serializeVectorU8ToBytes(String str) {
+  public static Bytes serializeStrToBytes(String str) {
     BcsSerializer s = new BcsSerializer();
     s.serialize_str(str);
     return Bytes.valueOf(s.get_bytes());
@@ -48,7 +49,7 @@ public class BcsSerializeHelper {
 
   @SneakyThrows
   public static Bytes serializeListToBytes(List<String> list) {
-    List<Bytes> bytesList = list.stream().map(s -> serializeVectorU8ToBytes(s))
+    List<Bytes> bytesList = list.stream().map(s -> serializeStrToBytes(s))
         .collect(Collectors.toList());
     BcsSerializer s = new BcsSerializer();
     s.serialize_len(bytesList.size());

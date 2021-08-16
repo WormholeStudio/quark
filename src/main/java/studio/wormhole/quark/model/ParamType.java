@@ -3,9 +3,6 @@ package studio.wormhole.quark.model;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.base.Splitter;
 import com.novi.serde.Bytes;
-import java.math.BigInteger;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +11,10 @@ import org.starcoin.utils.AccountAddressUtils;
 import studio.wormhole.quark.helper.BcsSerializeHelper;
 import studio.wormhole.quark.helper.move.MoveType;
 import studio.wormhole.quark.helper.move.MoveTypeDeserialize;
+
+import java.math.BigInteger;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -41,7 +42,7 @@ public class ParamType {
   private Bytes serializeVector(ArgType type, String value) {
 
     if (type.getMoveType() == MoveType.U8) {
-      return BcsSerializeHelper.serializeVectorU8ToBytes(value);
+      return BcsSerializeHelper.serializeStrToBytes(value);
     }
     List<String> list = Splitter.on(" ").trimResults().splitToList(value);
 
