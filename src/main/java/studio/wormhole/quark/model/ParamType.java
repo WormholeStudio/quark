@@ -22,54 +22,58 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ParamType {
 
-  String name;
-  @JSONField(deserializeUsing = MoveTypeDeserialize.class)
-  ArgType type_tag;
+    String name;
+    @JSONField(deserializeUsing = MoveTypeDeserialize.class)
+    ArgType type_tag;
 
 
-  public Bytes bcsSerialize(String value) {
+    public Bytes bcsSerialize(String value) {
 
-    MoveType moveType = getType_tag().getMoveType();
-    if (moveType == MoveType.STRUCT || moveType == MoveType.SINGER) {
-      throw new RuntimeException("Unsupported   :" + value + "," + moveType);
-    }
-    if (moveType == MoveType.VECTOR) {
-      return serializeVector(getType_tag().argType, value);
-    }
-    return serializeBaseType(getType_tag().moveType, value);
-  }
-
-  private Bytes serializeVector(ArgType type, String value) {
-
-    if (type.getMoveType() == MoveType.U8) {
-      return BcsSerializeHelper.serializeStrToBytes(value);
-    }
-    List<String> list = Splitter.on(" ").trimResults().splitToList(value);
-
-    List<Bytes> bytes = list.stream().map(s -> {
-          if (type.getMoveType().isBaseType()) {
-            return serializeBaseType(type.getMoveType(), s);
-          }
-          return serializeVector(type.getArgType(), s);
+        MoveType moveType = getType_tag().getMoveType();
+        if (moveType == MoveType.STRUCT || moveType == MoveType.SINGER) {
+            throw new RuntimeException("Unsupported   :" + value + "," + moveType);
         }
-    )
-        .collect(Collectors.toList());
-    return BcsSerializeHelper.serializeList(bytes);
-
-  }
-
-  private Bytes serializeBaseType(MoveType moveType, String value) {
-    switch (moveType) {
-      case ADDRESS:
-        return BcsSerializeHelper.serializeAddressToBytes(AccountAddressUtils.create(value));
-      case U8:
-        return BcsSerializeHelper.serializeU8ToBytes(Byte.valueOf(value));
-      case U64:
-        return BcsSerializeHelper.serializeU64ToBytes(Long.valueOf(value));
-      case U128:
-        return BcsSerializeHelper.serializeU128ToBytes(new BigInteger(value));
-      default:
-        throw new RuntimeException("Unsupported   :" + value + "," + moveType);
+        if (moveType == MoveType.VECTOR) {
+            return serializeVector(getType_tag().argType, value);
+        }
+        return serializeBaseType(getType_tag().moveType, value);
     }
-  }
+
+    private Bytes serializeVector(ArgType type, String value) {
+
+        if (type.getMoveType() == MoveType.U8) {
+            if (value.startsWith("0x")) {
+                return BcsSerializeHelper.serializeHexStringToVectorU8(value);
+            }
+            return BcsSerializeHelper.serializeStrToBytes(value);
+        }
+        List<String> list = Splitter.on(" ").trimResults().splitToList(value);
+
+        List<Bytes> bytes = list.stream().map(s -> {
+                            if (type.getMoveType().isBaseType()) {
+                                return serializeBaseType(type.getMoveType(), s);
+                            }
+                            return serializeVector(type.getArgType(), s);
+                        }
+                )
+                .collect(Collectors.toList());
+        return BcsSerializeHelper.serializeList(bytes);
+
+    }
+
+    private Bytes serializeBaseType(MoveType moveType, String value) {
+
+        switch (moveType) {
+            case ADDRESS:
+                return BcsSerializeHelper.serializeAddressToBytes(AccountAddressUtils.create(value));
+            case U8:
+                return BcsSerializeHelper.serializeU8ToBytes(Byte.valueOf(value));
+            case U64:
+                return BcsSerializeHelper.serializeU64ToBytes(Long.valueOf(value));
+            case U128:
+                return BcsSerializeHelper.serializeU128ToBytes(new BigInteger(value));
+            default:
+                throw new RuntimeException("Unsupported   :" + value + "," + moveType);
+        }
+    }
 }

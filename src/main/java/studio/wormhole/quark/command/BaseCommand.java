@@ -6,8 +6,8 @@ import picocli.CommandLine.Command;
 
 @Component
 @Command(
-    subcommands = {Contract.class,
-        CommandLine.HelpCommand.class})
+        subcommands = {Contract.class, Alma.class,
+                CommandLine.HelpCommand.class})
 public class BaseCommand {
 
 }

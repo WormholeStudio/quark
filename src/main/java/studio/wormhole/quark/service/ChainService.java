@@ -12,8 +12,8 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.CollectionUtils;
 import org.starcoin.bean.ScriptFunctionObj;
 import org.starcoin.bean.TypeObj;
+import org.starcoin.types.AccountAddress;
 import org.starcoin.types.Ed25519PrivateKey;
-import org.starcoin.utils.Hex;
 import studio.wormhole.quark.helper.ChainAccount;
 import studio.wormhole.quark.helper.QuarkClient;
 import studio.wormhole.quark.helper.move.MoveFile;
@@ -39,6 +39,10 @@ public class ChainService {
     ChainInfo chainInfo;
     QuarkClient client;
 
+    public AccountAddress accountAddress() {
+        return chainAccount.accountAddress();
+    }
+
     public ChainService(ChainAccount chainAccount, ChainInfo chainInfo) {
         this.chainAccount = chainAccount;
         this.chainInfo = chainInfo;
@@ -47,7 +51,7 @@ public class ChainService {
 
     public ChainService(ChainAccount chainAccount, int chainId) {
         this.chainInfo = chainInfo(chainId);
-        this.chainAccount=chainAccount;
+        this.chainAccount = chainAccount;
         this.client = getClient(chainInfo.getChainId(), null);
     }
 
@@ -64,7 +68,7 @@ public class ChainService {
         if (StringUtils.isNotEmpty(fileName)) {
             fileList = fileList
                     .stream()
-                    .filter(s -> StringUtils.containsAnyIgnoreCase(s.getName(), fileName))
+                    .filter(s -> StringUtils.containsAny(s.getName(), fileName))
                     .collect(
                             Collectors.toList());
         }
@@ -116,6 +120,9 @@ public class ChainService {
         checkTxnResult(rst, "call function: " + scriptFunctionObj.getFunctionName(), client);
     }
 
+    public void dryrun_function(ScriptFunctionObj scriptFunctionObj) {
+       client.dryRunScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObj);
+    }
     private void checkTxnResult(String rst, String message, QuarkClient client) {
         JSONObject jsonObject = JSON.parseObject(rst);
         String txn = jsonObject.getString("result");
@@ -175,7 +182,7 @@ public class ChainService {
             String arg = args.get(idx);
             ParamType argType = finalTypes.get(idx);
             Bytes v = argType.bcsSerialize(arg);
-            System.out.println(arg + "->" + Hex.encode(v) + "," + argType);
+//            System.out.println(arg + "->" + Hex.encode(v) + "," + argType);
             return v;
 
         }).collect(Collectors.toList());
@@ -208,8 +215,29 @@ public class ChainService {
         return new BigDecimal(amount).multiply(new BigDecimal(scaling)).toBigInteger();
     }
 
-    public void getCoin(String address, String token, String amount) {
-        call_function("0x00000000000000000000000000000001::TransferScripts::peer_to_peer_v2", Lists.newArrayList(token), Lists.newArrayList(address, amount));
+    public void getCoin(List<String> addressList, String token, List<String> amounts) {
+
+        List<String> param = Splitter.on("::").trimResults().splitToList("0x00000000000000000000000000000001::TransferScripts::peer_to_peer_v2");
+        ScriptFunctionObj scriptFunctionObj = ScriptFunctionObj
+                .builder()
+                .moduleAddress(param.get(0))
+                .moduleName(param.get(1))
+                .functionName(param.get(2))
+                .tyArgs(fromString(Lists.newArrayList(token)))
+                .args(Lists.newArrayList())
+                .build();
+        List<ParamType> rst = resolveFunction(scriptFunctionObj);
+
+        List<ScriptFunctionObj> scriptFunctionObjs = IntStream.range(0, addressList.size()).mapToObj(idx -> {
+            String address = addressList.get(idx);
+            String amount = amounts.get(idx);
+            List<Bytes> argsBytes = argsFromString(rst, Lists.newArrayList(address, amount));
+            return scriptFunctionObj.toBuilder().args(argsBytes).build();
+        }).collect(Collectors.toList());
+
+        List<String> txns = client.batchCallScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObjs);
+
+        System.out.println(txns);
     }
 
     public void changeAccount(ChainAccount chainAccount) {

@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class QuarkClient {
@@ -90,6 +91,28 @@ public class QuarkClient {
         RawUserTransaction rawUserTransaction = buildRawUserTransaction(sender, SignatureUtils.getPublicKey(privateKey), scriptFunction, null);
         String rst = submitHexTransaction(privateKey, rawUserTransaction);
         return rst;
+    }
+
+    public void dryRunScriptFunction(AccountAddress sender, Ed25519PrivateKey privateKey,
+                                     ScriptFunctionObj scriptFunctionObj) {
+
+        ScriptFunction scriptFunction = new ScriptFunction(scriptFunctionObj.toScriptFunction());
+        buildRawUserTransaction(sender, SignatureUtils.getPublicKey(privateKey), scriptFunction, null);
+
+    }
+
+    public List<String> batchCallScriptFunction(AccountAddress sender, Ed25519PrivateKey privateKey,
+                                                List<ScriptFunctionObj> scriptFunctionObjList) {
+
+        long seq = getAccountSequence(sender).get().sequence_number;
+        AtomicLong atomicLong = new AtomicLong(seq);
+        return scriptFunctionObjList.parallelStream().map(sf -> {
+            ScriptFunction scriptFunction = new ScriptFunction(sf.toScriptFunction());
+            RawUserTransaction rawUserTransaction = buildRawUserTransaction(sender, SignatureUtils.getPublicKey(privateKey), scriptFunction, atomicLong.getAndIncrement());
+            return submitHexTransaction(privateKey, rawUserTransaction);
+        }).collect(Collectors.toList());
+
+
     }
 
 
@@ -167,19 +190,20 @@ public class QuarkClient {
                     payload,
                     10000000L, 1L, "0x1::STC::STC",
                     ts + TimeUnit.HOURS.toSeconds(1L), chainId);
-
+//
             String dryRunHexTransaction = dryRunHexTransaction(rawUserTransaction, publicKey);
 
             JSONObject result = JSON.parseObject(dryRunHexTransaction).getJSONObject("result");
             String status = result.getString("status");
-//        String status= result.getJSONObject("");
             if (!"Executed".equalsIgnoreCase(status)) {
                 throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
             }
+            System.out.println("dry_run:" + status);
             BigInteger gasUsed = result.getBigInteger("gas_used");
 
             rawUserTransaction = new RawUserTransaction(sender, seqNumber.longValue(),
                     payload,
+//                    10000000L,
                     (long) (gasUsed.longValue() * 1.5),
                     1L, "0x1::STC::STC",
                     ts + TimeUnit.HOURS.toSeconds(1L), chainId);
@@ -209,4 +233,6 @@ public class QuarkClient {
                 address, type, ImmutableMap.of("decode", true)
         ));
     }
+
+
 }

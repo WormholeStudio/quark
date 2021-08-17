@@ -54,7 +54,7 @@ public class CallScript implements Callable<Integer> {
                 .privateKey(privateKeyStr)
                 .address(AccountAddressUtils.hex(gAddress))
                 .build(), chainId);
-        chainService.call_function(function, type_args, args);
+        chainService.call_function(function, type_args, args).ifPresent(s -> System.out.println(s));
         return 1;
     }
 
