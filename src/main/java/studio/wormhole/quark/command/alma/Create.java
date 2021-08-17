@@ -40,20 +40,14 @@ public class Create implements Callable<Integer> {
     String functionAddress;
     @CommandLine.Option(names = {"--token_type"}, description = "token type", required = false)
     String token_type;
-    @CommandLine.Option(names = {"--out"}, description = "csv file address", required = false)
+    @CommandLine.Option(names = {"--out"}, description = "result json file path", required = false)
     String out;
+
     @Override
     public Integer call() throws Exception {
-
         ChainService chainService = new ChainService(ChainAccount.builder()
                 .privateKey(privateKeyStr)
                 .build(), chainId);
-
-//        String json = FileUtils.readFileToString(new File(file), Charset.defaultCharset());
-//        ApiMerkleTree apiMerkleTree = JSON.parseObject(json, ApiMerkleTree.class);
-//
-
-
         CsvToBean<CSVRecord> csvToBean = new CsvToBeanBuilder(
                 new InputStreamReader(new FileInputStream(file)))
                 .withType(CSVRecord.class)
@@ -76,9 +70,9 @@ public class Create implements Callable<Integer> {
         apiMerkleTree.setTokenType(token_type);
         apiMerkleTree.setOwnerAddress(AccountAddressUtils.hex(chainService.accountAddress()));
 
-        System.out.println(JSON.toJSONString(apiMerkleTree,true));
-        if (StringUtils.isNotEmpty(out)){
-            FileUtils.writeStringToFile(new File(out),JSON.toJSONString(apiMerkleTree,true), Charset.defaultCharset());
+        System.out.println(JSON.toJSONString(apiMerkleTree, true));
+        if (StringUtils.isNotEmpty(out)) {
+            FileUtils.writeStringToFile(new File(out), JSON.toJSONString(apiMerkleTree, true), Charset.defaultCharset());
         }
         BigInteger amount = apiMerkleTree.getProofs().stream().map(s -> s.getAmount())
                 .reduce((bigInteger, bigInteger2) -> bigInteger.add(bigInteger2)).get();

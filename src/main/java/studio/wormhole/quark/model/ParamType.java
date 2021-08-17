@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.starcoin.utils.AccountAddressUtils;
+import org.starcoin.utils.Hex;
 import studio.wormhole.quark.helper.BcsSerializeHelper;
 import studio.wormhole.quark.helper.move.MoveType;
 import studio.wormhole.quark.helper.move.MoveTypeDeserialize;
@@ -34,15 +35,18 @@ public class ParamType {
             throw new RuntimeException("Unsupported   :" + value + "," + moveType);
         }
         if (moveType == MoveType.VECTOR) {
-            return serializeVector(getType_tag().argType, value);
+            return serializeVector(getType_tag().argType, value, null);
         }
         return serializeBaseType(getType_tag().moveType, value);
     }
 
-    private Bytes serializeVector(ArgType type, String value) {
+    private Bytes serializeVector(ArgType type, String value, ArgType parentType) {
 
         if (type.getMoveType() == MoveType.U8) {
             if (value.startsWith("0x")) {
+                if (parentType != null && parentType.getMoveType() == MoveType.VECTOR) {
+                    return new Bytes(Hex.decode(value));
+                }
                 return BcsSerializeHelper.serializeHexStringToVectorU8(value);
             }
             return BcsSerializeHelper.serializeStrToBytes(value);
@@ -53,7 +57,7 @@ public class ParamType {
                             if (type.getMoveType().isBaseType()) {
                                 return serializeBaseType(type.getMoveType(), s);
                             }
-                            return serializeVector(type.getArgType(), s);
+                            return serializeVector(type.getArgType(), s, type);
                         }
                 )
                 .collect(Collectors.toList());

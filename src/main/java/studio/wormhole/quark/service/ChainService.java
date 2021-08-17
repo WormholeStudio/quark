@@ -121,8 +121,9 @@ public class ChainService {
     }
 
     public void dryrun_function(ScriptFunctionObj scriptFunctionObj) {
-       client.dryRunScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObj);
+        client.dryRunScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObj);
     }
+
     private void checkTxnResult(String rst, String message, QuarkClient client) {
         JSONObject jsonObject = JSON.parseObject(rst);
         String txn = jsonObject.getString("result");
@@ -151,13 +152,32 @@ public class ChainService {
                 .args(Lists.newArrayList())
                 .build();
         List<ParamType> rst = resolveFunction(scriptFunctionObj);
-        List<Bytes> argsBytes = argsFromString(rst, args);
         boolean need_sign = need_sign(rst);
         if (need_sign) {
+            List<Bytes> argsBytes = argsFromString(rst, args);
+            String a = args.get(args.size() - 1);
             call_function(scriptFunctionObj.toBuilder().args(argsBytes).build());
             return Optional.empty();
         }
         return Optional.ofNullable(call_contract_run(function, type_args, args));
+
+    }
+
+    public Optional<String> dry_call_function(String function, List<String> type_args, List<String> args) {
+        List<String> param = Splitter.on("::").trimResults().splitToList(function);
+        ScriptFunctionObj scriptFunctionObj = ScriptFunctionObj
+                .builder()
+                .moduleAddress(param.get(0))
+                .moduleName(param.get(1))
+                .functionName(param.get(2))
+                .tyArgs(fromString(type_args))
+                .args(Lists.newArrayList())
+                .build();
+        List<ParamType> rst = resolveFunction(scriptFunctionObj);
+        List<Bytes> argsBytes = argsFromString(rst, args);
+        String a = args.get(args.size() - 1);
+        dryrun_function(scriptFunctionObj.toBuilder().args(argsBytes).build());
+        return Optional.empty();
 
     }
 
