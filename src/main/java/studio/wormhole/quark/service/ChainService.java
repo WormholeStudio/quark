@@ -15,7 +15,6 @@ import org.starcoin.bean.ScriptFunctionObj;
 import org.starcoin.bean.TypeObj;
 import org.starcoin.types.AccountAddress;
 import org.starcoin.types.Ed25519PrivateKey;
-import org.starcoin.utils.Hex;
 import studio.wormhole.quark.helper.ChainAccount;
 import studio.wormhole.quark.helper.QuarkClient;
 import studio.wormhole.quark.helper.move.MoveFile;
@@ -157,7 +156,6 @@ public class ChainService {
         boolean need_sign = need_sign(rst);
         if (need_sign) {
             List<Bytes> argsBytes = argsFromString(rst, args);
-            System.out.println(Hex.encode(argsBytes.get(0)));
             call_function(scriptFunctionObj.toBuilder().args(argsBytes).build());
             return Optional.empty();
         }
