@@ -3,10 +3,7 @@ package studio.wormhole.quark.model;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.base.Splitter;
 import com.novi.serde.Bytes;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.starcoin.utils.AccountAddressUtils;
 import org.starcoin.utils.Hex;
 import studio.wormhole.quark.helper.BcsSerializeHelper;
@@ -40,6 +37,7 @@ public class ParamType {
         return serializeBaseType(getType_tag().moveType, value);
     }
 
+    @SneakyThrows
     private Bytes serializeVector(ArgType type, String value, ArgType parentType) {
 
         if (type.getMoveType() == MoveType.U8) {
@@ -51,9 +49,12 @@ public class ParamType {
             }
             return BcsSerializeHelper.serializeStrToBytes(value);
         }
+
         List<String> list = Splitter.on(" ").trimResults().splitToList(value);
 
-        List<Bytes> bytes = list.stream().map(s -> {
+        List<Bytes> bytes = list
+                .stream()
+                .map(s -> {
                             if (type.getMoveType().isBaseType()) {
                                 return serializeBaseType(type.getMoveType(), s);
                             }

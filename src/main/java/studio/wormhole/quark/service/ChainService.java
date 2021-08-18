@@ -2,6 +2,7 @@ package studio.wormhole.quark.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.novi.serde.Bytes;
@@ -14,6 +15,7 @@ import org.starcoin.bean.ScriptFunctionObj;
 import org.starcoin.bean.TypeObj;
 import org.starcoin.types.AccountAddress;
 import org.starcoin.types.Ed25519PrivateKey;
+import org.starcoin.utils.Hex;
 import studio.wormhole.quark.helper.ChainAccount;
 import studio.wormhole.quark.helper.QuarkClient;
 import studio.wormhole.quark.helper.move.MoveFile;
@@ -155,7 +157,7 @@ public class ChainService {
         boolean need_sign = need_sign(rst);
         if (need_sign) {
             List<Bytes> argsBytes = argsFromString(rst, args);
-            String a = args.get(args.size() - 1);
+            System.out.println(Hex.encode(argsBytes.get(0)));
             call_function(scriptFunctionObj.toBuilder().args(argsBytes).build());
             return Optional.empty();
         }
@@ -235,29 +237,40 @@ public class ChainService {
         return new BigDecimal(amount).multiply(new BigDecimal(scaling)).toBigInteger();
     }
 
-    public void getCoin(List<String> addressList, String token, List<String> amounts) {
 
-        List<String> param = Splitter.on("::").trimResults().splitToList("0x00000000000000000000000000000001::TransferScripts::peer_to_peer_v2");
-        ScriptFunctionObj scriptFunctionObj = ScriptFunctionObj
-                .builder()
-                .moduleAddress(param.get(0))
-                .moduleName(param.get(1))
-                .functionName(param.get(2))
-                .tyArgs(fromString(Lists.newArrayList(token)))
-                .args(Lists.newArrayList())
-                .build();
-        List<ParamType> rst = resolveFunction(scriptFunctionObj);
+    public void batchGetCoin(String tokenType, List<String> addressList, List<String> amount) {
+        call_function("0x00000000000000000000000000000001::TransferScripts::batch_peer_to_peer_v2"
+                , Lists.newArrayList(tokenType)
+                , Lists.newArrayList(
+                        Joiner.on(" ").join(addressList)
+                        , Joiner.on(" ").join(amount)));
 
-        List<ScriptFunctionObj> scriptFunctionObjs = IntStream.range(0, addressList.size()).mapToObj(idx -> {
-            String address = addressList.get(idx);
-            String amount = amounts.get(idx);
-            List<Bytes> argsBytes = argsFromString(rst, Lists.newArrayList(address, amount));
-            return scriptFunctionObj.toBuilder().args(argsBytes).build();
-        }).collect(Collectors.toList());
+    }
 
-        List<String> txns = client.batchCallScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObjs);
+    public void getCoin(String addressList, String token, String amount) {
 
-        System.out.println(txns);
+        call_function("0x00000000000000000000000000000001::TransferScripts::peer_to_peer_v2", Lists.newArrayList(token), Lists.newArrayList(addressList, amount));
+//        List<String> param = Splitter.on("::").trimResults().splitToList("0x00000000000000000000000000000001::TransferScripts::peer_to_peer_v2");
+//        ScriptFunctionObj scriptFunctionObj = ScriptFunctionObj
+//                .builder()
+//                .moduleAddress(param.get(0))
+//                .moduleName(param.get(1))
+//                .functionName(param.get(2))
+//                .tyArgs(fromString(Lists.newArrayList(token)))
+//                .args(Lists.newArrayList())
+//                .build();
+//        List<ParamType> rst = resolveFunction(scriptFunctionObj);
+//
+//        List<ScriptFunctionObj> scriptFunctionObjs = IntStream.range(0, addressList.size()).mapToObj(idx -> {
+//            String address = addressList.get(idx);
+//            String amount = amounts.get(idx);
+//            List<Bytes> argsBytes = argsFromString(rst, Lists.newArrayList(address, amount));
+//            return scriptFunctionObj.toBuilder().args(argsBytes).build();
+//        }).collect(Collectors.toList());
+//
+//        List<String> txns = client.batchCallScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObjs);
+//
+//        System.out.println(txns);
     }
 
     public void changeAccount(ChainAccount chainAccount) {

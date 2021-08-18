@@ -70,6 +70,7 @@ public class Create implements Callable<Integer> {
         apiMerkleTree.setTokenType(token_type);
         apiMerkleTree.setOwnerAddress(AccountAddressUtils.hex(chainService.accountAddress()));
 
+        apiMerkleTree.setChainId(chainId);
         System.out.println(JSON.toJSONString(apiMerkleTree, true));
         if (StringUtils.isNotEmpty(out)) {
             FileUtils.writeStringToFile(new File(out), JSON.toJSONString(apiMerkleTree, true), Charset.defaultCharset());

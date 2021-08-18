@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class ApiMerkleTree {
     private long airDropId;
+    private int chainId;
     private String tokenType;
     private String ownerAddress;
     private String root;

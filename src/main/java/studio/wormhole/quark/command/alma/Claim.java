@@ -28,18 +28,25 @@ public class Claim implements Callable<Integer> {
     @CommandLine.Option(names = {"--file"}, description = "csv file address", required = true)
     String file;
     @CommandLine.Option(names = {"--chain",
-            "-c"}, description = "chain id :localhost=254 ,main=1 ,barnard=251", defaultValue = "0", required = true)
-    int chainId;
+            "-c"}, description = "chain id :localhost=254 ,main=1 ,barnard=251", defaultValue = "0", required = false)
+    Integer chainId;
 
 
     @Override
     public Integer call() throws Exception {
+
+
+        String json = FileUtils.readFileToString(new File(file), Charset.defaultCharset());
+        ApiMerkleTree apiMerkleTree = JSON.parseObject(json, ApiMerkleTree.class);
+        if (chainId == null) {
+            chainId = apiMerkleTree.getChainId();
+        }
+
+
         ChainService chainService = new ChainService(ChainAccount.builder()
                 .privateKey(privateKeyStr)
                 .build(), chainId);
 
-        String json = FileUtils.readFileToString(new File(file), Charset.defaultCharset());
-        ApiMerkleTree apiMerkleTree = JSON.parseObject(json, ApiMerkleTree.class);
         ApiMerkleProof proof = apiMerkleTree.getProofs().stream().filter(s -> StringUtils.equalsIgnoreCase(s.getAddress(), AccountAddressUtils.hex(chainService.accountAddress())))
                 .findAny().orElseThrow(() -> new RuntimeException("no such address"));
         String functionAddress = apiMerkleTree.getFunctionAddress().toLowerCase();

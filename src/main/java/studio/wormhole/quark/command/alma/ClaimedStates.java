@@ -22,19 +22,23 @@ public class ClaimedStates implements Callable<Integer> {
     @CommandLine.Option(names = {"--file"}, description = "json file ", required = true)
     String file;
     @CommandLine.Option(names = {"--chain",
-            "-c"}, description = "chain id :localhost=254 ,main=1 ,barnard=251", defaultValue = "0", required = true)
-    int chainId;
+            "-c"}, description = "chain id :localhost=254 ,main=1 ,barnard=251", defaultValue = "0", required = false)
+    Integer chainId;
 
 
     @Override
     public Integer call() throws Exception {
-        ChainService chainService = new ChainService(ChainAccount.builder()
-                .privateKey("")
-                .build(), chainId);
+
 
         String json = FileUtils.readFileToString(new File(file), Charset.defaultCharset());
         ApiMerkleTree apiMerkleTree = JSON.parseObject(json, ApiMerkleTree.class);
         String functionAddress = apiMerkleTree.getFunctionAddress().toLowerCase();
+        if (chainId == null) {
+            chainId = apiMerkleTree.getChainId();
+        }
+        ChainService chainService = new ChainService(ChainAccount.builder()
+                .privateKey("")
+                .build(), chainId);
 
         apiMerkleTree.getProofs().parallelStream().forEach(s -> {
             chainService.call_function(functionAddress + "::MerkleDistributor2::is_claimed",
