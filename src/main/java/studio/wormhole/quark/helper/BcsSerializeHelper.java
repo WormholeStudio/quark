@@ -139,4 +139,26 @@ public class BcsSerializeHelper {
     }
 
 
+    @SneakyThrows
+    public static Bytes serializeVectorAddress(List<AccountAddress> list) {
+        BcsSerializer s = new BcsSerializer();
+        s.serialize_len(list.size());
+        for (AccountAddress item : list) {
+            item.serialize(s);
+        }
+        byte[] bytes = s.get_bytes();
+        return Bytes.valueOf(bytes);
+    }
+
+    @SneakyThrows
+    public static Bytes serializeVectorU128(List<BigInteger> list) {
+        BcsSerializer s = new BcsSerializer();
+        s.serialize_len(list.size());
+        for (BigInteger item : list) {
+            s.serialize_u128(item);
+        }
+        byte[] bytes = s.get_bytes();
+        return Bytes.valueOf(bytes);
+    }
+
 }

@@ -39,6 +39,7 @@ public class ParamType {
 
     @SneakyThrows
     private Bytes serializeVector(ArgType type, String value, ArgType parentType) {
+        List<String> list = Splitter.on(" ").trimResults().splitToList(value);
 
         if (type.getMoveType() == MoveType.U8) {
             if (value.startsWith("0x")) {
@@ -50,20 +51,38 @@ public class ParamType {
             return BcsSerializeHelper.serializeStrToBytes(value);
         }
 
-        List<String> list = Splitter.on(" ").trimResults().splitToList(value);
 
-        List<Bytes> bytes = list
-                .stream()
-                .map(s -> {
-                            if (type.getMoveType().isBaseType()) {
-                                return serializeBaseType(type.getMoveType(), s);
-                            }
-                            return serializeVector(type.getArgType(), s, type);
-                        }
-                )
-                .collect(Collectors.toList());
-        return BcsSerializeHelper.serializeList(bytes);
+        if (type.getMoveType() == MoveType.ADDRESS) {
 
+            return serializeVectorAddress(list);
+        }
+
+        if (type.getMoveType() == MoveType.U128) {
+
+            return serializeVectorU128(list);
+        }
+
+        throw new RuntimeException("Unsupported   :" + value + parentType + "," + type + ",");
+//        List<Bytes> bytes = list
+//                .stream()
+//                .map(s -> {
+//                            if (type.getMoveType().isBaseType()) {
+//                                return serializeBaseType(type.getMoveType(), s);
+//                            }
+//                            return serializeVector(type.getArgType(), s, type);
+//                        }
+//                )
+//                .collect(Collectors.toList());
+//        return BcsSerializeHelper.serializeList(bytes);
+
+    }
+
+    private Bytes serializeVectorU128(List<String> list) {
+        return BcsSerializeHelper.serializeVectorU128(list.stream().map(s -> new BigInteger(s)).collect(Collectors.toList()));
+    }
+
+    private Bytes serializeVectorAddress(List<String> list) {
+        return BcsSerializeHelper.serializeVectorAddress(list.stream().map(s -> AccountAddressUtils.create(s)).collect(Collectors.toList()));
     }
 
     private Bytes serializeBaseType(MoveType moveType, String value) {

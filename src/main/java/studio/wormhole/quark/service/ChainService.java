@@ -118,6 +118,12 @@ public class ChainService {
 
     public void call_function(ScriptFunctionObj scriptFunctionObj) {
         String rst = client.callScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObj);
+
+        JSONObject json = JSON.parseObject(rst);
+        if (json.containsKey("error")) {
+            throw new RuntimeException(scriptFunctionObj.getFunctionName()+","+json.getJSONObject("error").toJSONString());
+        }
+
         checkTxnResult(rst, "call function: " + scriptFunctionObj.getFunctionName(), client);
     }
 
