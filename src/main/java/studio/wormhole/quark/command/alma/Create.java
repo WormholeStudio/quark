@@ -42,7 +42,7 @@ public class Create implements Callable<Integer> {
     String token_type;
     @CommandLine.Option(names = {"--out"}, description = "result json file path", required = false)
     String out;
-    @CommandLine.Option(names = {"--aridrop_id"}, description = "aridrop_id", required = false)
+    @CommandLine.Option(names = {"--airdrop_id"}, description = "aridrop_id", required = false)
     Long airdropId;
 
     @Override
