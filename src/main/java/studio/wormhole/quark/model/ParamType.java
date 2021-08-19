@@ -62,18 +62,17 @@ public class ParamType {
             return serializeVectorU128(list);
         }
 
-        throw new RuntimeException("Unsupported   :" + value + parentType + "," + type + ",");
-//        List<Bytes> bytes = list
-//                .stream()
-//                .map(s -> {
-//                            if (type.getMoveType().isBaseType()) {
-//                                return serializeBaseType(type.getMoveType(), s);
-//                            }
-//                            return serializeVector(type.getArgType(), s, type);
-//                        }
-//                )
-//                .collect(Collectors.toList());
-//        return BcsSerializeHelper.serializeList(bytes);
+        List<Bytes> bytes = list
+                .stream()
+                .map(s -> {
+                            if (type.getMoveType().isBaseType()) {
+                                return serializeBaseType(type.getMoveType(), s);
+                            }
+                            return serializeVector(type.getArgType(), s, type);
+                        }
+                )
+                .collect(Collectors.toList());
+        return BcsSerializeHelper.serializeList(bytes);
 
     }
 

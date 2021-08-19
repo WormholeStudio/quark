@@ -42,6 +42,8 @@ public class Create implements Callable<Integer> {
     String token_type;
     @CommandLine.Option(names = {"--out"}, description = "result json file path", required = false)
     String out;
+    @CommandLine.Option(names = {"--aridrop_id"}, description = "aridrop_id", required = false)
+    Long airdropId;
 
     @Override
     public Integer call() throws Exception {
@@ -56,10 +58,13 @@ public class Create implements Callable<Integer> {
 
         List<CSVRecord> records = Lists.newArrayList(csvToBean.iterator());
 
-        long airDropId = System.currentTimeMillis();
-        ApiMerkleTree apiMerkleTree = MerkleTreeHelper.merkleTree(airDropId, records);
 
-        apiMerkleTree.setAirDropId(airDropId);
+        if (airdropId == null) {
+            airdropId = System.currentTimeMillis();
+        }
+        ApiMerkleTree apiMerkleTree = MerkleTreeHelper.merkleTree(airdropId, records);
+
+        apiMerkleTree.setAirDropId(airdropId);
         if (StringUtils.isEmpty(functionAddress)) {
             functionAddress = "0xb987F1aB0D7879b2aB421b98f96eFb44";
         }

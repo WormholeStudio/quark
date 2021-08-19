@@ -195,9 +195,9 @@ public class QuarkClient {
 
             JSONObject result = JSON.parseObject(dryRunHexTransaction).getJSONObject("result");
             String status = result.getString("status");
-//            if (!"Executed".equalsIgnoreCase(status)) {
-//                throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
-//            }
+            if (!"Executed".equalsIgnoreCase(status)) {
+                throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
+            }
 //            System.out.println("dry_run:" + status);
             BigInteger gasUsed = result.getBigInteger("gas_used");
 
