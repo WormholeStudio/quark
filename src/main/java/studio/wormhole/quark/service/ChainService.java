@@ -19,9 +19,9 @@ import studio.wormhole.quark.helper.ChainAccount;
 import studio.wormhole.quark.helper.QuarkClient;
 import studio.wormhole.quark.helper.move.MoveFile;
 import studio.wormhole.quark.helper.move.MovePackageUtil;
-import studio.wormhole.quark.helper.move.MoveType;
+import studio.wormhole.quark.abi.MoveType;
 import studio.wormhole.quark.model.ChainInfo;
-import studio.wormhole.quark.model.ParamType;
+import studio.wormhole.quark.abi.ParamType;
 import studio.wormhole.quark.model.Txn;
 
 import java.math.BigDecimal;
@@ -121,7 +121,7 @@ public class ChainService {
 
         JSONObject json = JSON.parseObject(rst);
         if (json.containsKey("error")) {
-            throw new RuntimeException(scriptFunctionObj.getFunctionName()+","+json.getJSONObject("error").toJSONString());
+            throw new RuntimeException(scriptFunctionObj.getFunctionName() + "," + json.getJSONObject("error").toJSONString());
         }
 
         checkTxnResult(rst, "call function: " + scriptFunctionObj.getFunctionName(), client);
@@ -252,32 +252,18 @@ public class ChainService {
     }
 
     public void getCoin(String addressList, String token, String amount) {
-
         call_function("0x00000000000000000000000000000001::TransferScripts::peer_to_peer_v2", Lists.newArrayList(token), Lists.newArrayList(addressList, amount));
-//        List<String> param = Splitter.on("::").trimResults().splitToList("0x00000000000000000000000000000001::TransferScripts::peer_to_peer_v2");
-//        ScriptFunctionObj scriptFunctionObj = ScriptFunctionObj
-//                .builder()
-//                .moduleAddress(param.get(0))
-//                .moduleName(param.get(1))
-//                .functionName(param.get(2))
-//                .tyArgs(fromString(Lists.newArrayList(token)))
-//                .args(Lists.newArrayList())
-//                .build();
-//        List<ParamType> rst = resolveFunction(scriptFunctionObj);
-//
-//        List<ScriptFunctionObj> scriptFunctionObjs = IntStream.range(0, addressList.size()).mapToObj(idx -> {
-//            String address = addressList.get(idx);
-//            String amount = amounts.get(idx);
-//            List<Bytes> argsBytes = argsFromString(rst, Lists.newArrayList(address, amount));
-//            return scriptFunctionObj.toBuilder().args(argsBytes).build();
-//        }).collect(Collectors.toList());
-//
-//        List<String> txns = client.batchCallScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObjs);
-//
-//        System.out.println(txns);
+    }
+
+    public void importAccount(ChainAccount chainAccount) {
+
+        String rst = client.importAccount(chainAccount);
+        System.out.println(rst);
     }
 
     public void changeAccount(ChainAccount chainAccount) {
         this.chainAccount = chainAccount;
     }
+
+
 }

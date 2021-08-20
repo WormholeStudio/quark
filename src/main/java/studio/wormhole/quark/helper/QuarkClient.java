@@ -198,7 +198,7 @@ public class QuarkClient {
             if (!"Executed".equalsIgnoreCase(status)) {
                 throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
             }
-//            System.out.println("dry_run:" + status);
+            System.out.println("dry_run:" + status);
             BigInteger gasUsed = result.getBigInteger("gas_used");
 
             rawUserTransaction = new RawUserTransaction(sender, seqNumber.longValue(),
@@ -235,4 +235,12 @@ public class QuarkClient {
     }
 
 
+    public String importAccount(ChainAccount chainAccount) {
+        return call("account.import", Lists.newArrayList(AccountAddressUtils.hex(chainAccount.accountAddress()), chainAccount.getPrivateKey(), chainAccount.getPassword().orElse("")));
+    }
+
+//    public void createAccount(Optional<String> pwd) {
+//        return;
+//        call("account.import")
+//    }
 }

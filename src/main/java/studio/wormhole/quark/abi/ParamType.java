@@ -1,4 +1,4 @@
-package studio.wormhole.quark.model;
+package studio.wormhole.quark.abi;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.base.Splitter;
@@ -7,8 +7,6 @@ import lombok.*;
 import org.starcoin.utils.AccountAddressUtils;
 import org.starcoin.utils.Hex;
 import studio.wormhole.quark.helper.BcsSerializeHelper;
-import studio.wormhole.quark.helper.move.MoveType;
-import studio.wormhole.quark.helper.move.MoveTypeDeserialize;
 
 import java.math.BigInteger;
 import java.util.List;

@@ -13,6 +13,8 @@ import org.starcoin.utils.AuthenticationKeyUtils;
 import org.starcoin.utils.Scheme;
 import org.starcoin.utils.SignatureUtils;
 
+import java.util.Optional;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,6 +22,7 @@ import org.starcoin.utils.SignatureUtils;
 public class ChainAccount {
     String privateKey;
     String address;
+    Optional<String> password;
 
 
     public AccountAddress accountAddress() {

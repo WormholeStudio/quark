@@ -1,17 +1,16 @@
-package studio.wormhole.quark.helper.move;
+package studio.wormhole.quark.abi;
 
 import com.alibaba.fastjson.parser.DefaultJSONParser;
 import com.alibaba.fastjson.parser.JSONLexer;
 import com.alibaba.fastjson.parser.JSONToken;
 import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
+
 import java.lang.reflect.Type;
-import studio.wormhole.quark.model.ArgType;
 
 public class MoveTypeDeserialize implements ObjectDeserializer {
 
   @Override
   public ArgType deserialze(DefaultJSONParser defaultJSONParser, Type type, Object o) {
-
     JSONLexer jsonLexer = defaultJSONParser.getLexer();
     return parse(jsonLexer);
   }

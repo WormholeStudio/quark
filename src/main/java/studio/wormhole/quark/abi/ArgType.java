@@ -1,10 +1,9 @@
-package studio.wormhole.quark.model;
+package studio.wormhole.quark.abi;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import studio.wormhole.quark.helper.move.MoveType;
 
 @Data
 @Builder
