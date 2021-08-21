@@ -7,6 +7,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.novi.serde.Bytes;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Slf4j
 public class ChainService {
 
     ChainAccount chainAccount;
@@ -99,10 +101,10 @@ public class ChainService {
             }
             if (result != null) {
                 String message = txn.getTxn() + "," + txn.getMessage() + "," + result.getString("status");
-                System.out.println(message);
+                log.debug(message);
                 return true;
             }
-            System.out.println(txn.getMessage() + " ...waiting....");
+            log.debug(txn.getMessage() + " ...waiting....");
             throw new RuntimeException("");
         });
 
@@ -119,7 +121,7 @@ public class ChainService {
     public void call_function(ScriptFunctionObj scriptFunctionObj) {
         String rst = client.callScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObj);
 
-        System.out.println(rst);
+        log.debug(rst);
         JSONObject json = JSON.parseObject(rst);
         if (json.containsKey("error")) {
             throw new RuntimeException(scriptFunctionObj.getFunctionName() + "," + json.getJSONObject("error").toJSONString());
@@ -285,6 +287,6 @@ public class ChainService {
     }
 
     public String getResource(String address, String type) {
-        return client.getResource(address,type);
+        return client.getResource(address, type);
     }
 }

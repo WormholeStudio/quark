@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.novi.serde.Bytes;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.starcoin.bean.ScriptFunctionObj;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class QuarkClient {
 
     private ChainInfo chainInfo;
@@ -184,7 +186,7 @@ public class QuarkClient {
             ChainId chainId = new ChainId((byte) this.chainId);
             long ts = System.currentTimeMillis() / 1000L;
             if (this.chainId > 1 && this.chainId < 250 || this.chainId == 254) {
-                ts =0;
+                ts = 0;
             }
             RawUserTransaction rawUserTransaction = new RawUserTransaction(sender, seqNumber.longValue(),
                     payload,
@@ -195,9 +197,9 @@ public class QuarkClient {
 
             JSONObject result = JSON.parseObject(dryRunHexTransaction).getJSONObject("result");
             String status = result.getString("status");
-            System.out.println("dry_run:" + status);
+            log.debug("dry_run:" + status);
             if (!"Executed".equalsIgnoreCase(status)) {
-//                throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
+                throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
             }
             BigInteger gasUsed = result.getBigInteger("gas_used");
 
