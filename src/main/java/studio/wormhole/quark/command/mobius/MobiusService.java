@@ -48,12 +48,16 @@ public class MobiusService {
                 .contractAddress("0xf8af03dd08de49d81e4efd9e24c039cc").build();
         String json = JSON.toJSONString(config);
         FileUtils.writeStringToFile(new File(store), json, Charset.defaultCharset());
-        chainService = new ChainService(config.getLoginAccount(), config.getChainId());
-        if (!chainService.isAccountExist(chainAccount.getAddress())) {
-            System.out.println("address " + chainAccount.getAddress() + " is not exist on chain " + chainId + " ,will create it ......");
-            chainService.importAccount(chainAccount);
-            getCoin(CoinType.STC, "1");
+
+        if (chainId== 254){
+            chainService = new ChainService(config.getLoginAccount(), config.getChainId());
+            if (!chainService.isAccountExist(chainAccount.getAddress())) {
+                System.out.println("address " + chainAccount.getAddress() + " is not exist on chain " + chainId + " ,will create it ......");
+                chainService.importAccount(chainAccount);
+                getCoin(CoinType.STC, "1");
+            }
         }
+
     }
 
     void checkLogin(String store) {
