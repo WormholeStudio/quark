@@ -9,9 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.starcoin.utils.AccountAddressUtils;
 import picocli.CommandLine;
-import studio.wormhole.quark.airdrop.ApiMerkleTree;
-import studio.wormhole.quark.airdrop.CSVRecord;
-import studio.wormhole.quark.airdrop.MerkleTreeHelper;
+import studio.wormhole.quark.command.alma.airdrop.ApiMerkleTree;
+import studio.wormhole.quark.command.alma.airdrop.CSVRecord;
+import studio.wormhole.quark.command.alma.airdrop.MerkleTreeHelper;
 import studio.wormhole.quark.helper.ChainAccount;
 import studio.wormhole.quark.service.ChainService;
 

@@ -1,4 +1,4 @@
-package studio.wormhole.quark.airdrop;
+package studio.wormhole.quark.command.alma.airdrop;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

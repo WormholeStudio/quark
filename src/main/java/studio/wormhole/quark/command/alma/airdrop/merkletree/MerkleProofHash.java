@@ -1,4 +1,4 @@
-package studio.wormhole.quark.airdrop.merkletree;
+package studio.wormhole.quark.command.alma.airdrop.merkletree;
 
 public class MerkleProofHash {
     public enum Branch {

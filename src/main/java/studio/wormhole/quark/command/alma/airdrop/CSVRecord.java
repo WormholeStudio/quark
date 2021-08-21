@@ -1,4 +1,4 @@
-package studio.wormhole.quark.airdrop;
+package studio.wormhole.quark.command.alma.airdrop;
 
 import com.opencsv.bean.CsvBindByName;
 import lombok.AllArgsConstructor;

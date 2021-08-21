@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
-import studio.wormhole.quark.airdrop.ApiMerkleTree;
+import studio.wormhole.quark.command.alma.airdrop.ApiMerkleTree;
 import studio.wormhole.quark.helper.ChainAccount;
 import studio.wormhole.quark.service.ChainService;
 

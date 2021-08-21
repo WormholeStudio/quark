@@ -1,4 +1,4 @@
-package studio.wormhole.quark.airdrop.merkletree;
+package studio.wormhole.quark.command.alma.airdrop.merkletree;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;

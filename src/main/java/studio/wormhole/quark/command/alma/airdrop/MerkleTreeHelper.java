@@ -1,4 +1,4 @@
-package studio.wormhole.quark.airdrop;
+package studio.wormhole.quark.command.alma.airdrop;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
@@ -8,9 +8,9 @@ import lombok.SneakyThrows;
 import org.starcoin.utils.AccountAddressUtils;
 import org.starcoin.utils.BcsSerializeHelper;
 import org.starcoin.utils.Hex;
-import studio.wormhole.quark.airdrop.merkletree.MerkleHash;
-import studio.wormhole.quark.airdrop.merkletree.MerkleProofHash;
-import studio.wormhole.quark.airdrop.merkletree.MerkleTree;
+import studio.wormhole.quark.command.alma.airdrop.merkletree.MerkleHash;
+import studio.wormhole.quark.command.alma.airdrop.merkletree.MerkleProofHash;
+import studio.wormhole.quark.command.alma.airdrop.merkletree.MerkleTree;
 
 import java.math.BigInteger;
 import java.util.List;
