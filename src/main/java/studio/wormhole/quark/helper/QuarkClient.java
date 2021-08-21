@@ -183,8 +183,8 @@ public class QuarkClient {
             }
             ChainId chainId = new ChainId((byte) this.chainId);
             long ts = System.currentTimeMillis() / 1000L;
-            if (this.chainId == 254) {
-                ts = 1;
+            if (this.chainId > 1 && this.chainId < 250 || this.chainId == 254) {
+                ts =0;
             }
             RawUserTransaction rawUserTransaction = new RawUserTransaction(sender, seqNumber.longValue(),
                     payload,
@@ -195,24 +195,31 @@ public class QuarkClient {
 
             JSONObject result = JSON.parseObject(dryRunHexTransaction).getJSONObject("result");
             String status = result.getString("status");
+            System.out.println("dry_run:" + status);
             if (!"Executed".equalsIgnoreCase(status)) {
-                System.out.println(result.getJSONObject("explained_status"));
 //                throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
             }
-            System.out.println("dry_run:" + status);
             BigInteger gasUsed = result.getBigInteger("gas_used");
 
             rawUserTransaction = new RawUserTransaction(sender, seqNumber.longValue(),
                     payload,
-//                    10000000L,
-                    (long) (gasUsed.longValue() * 1.5),
+                    gasUsed.longValue() * 2,
                     1L, "0x1::STC::STC",
-                    ts + TimeUnit.HOURS.toSeconds(1L), chainId);
+                    ts + TimeUnit.HOURS.toSeconds(1L)
+                    , chainId);
 
             return rawUserTransaction;
         } catch (Throwable var8) {
             throw var8;
         }
+    }
+
+    private long getChainTimestamp() {
+
+        String rst = call("chain.info", Lists.newArrayList());
+        JSONObject jsonObject = JSON.parseObject(rst);
+        long ts = jsonObject.getJSONObject("result").getJSONObject("head").getLong("timestamp");
+        return ts;
     }
 
 
@@ -238,6 +245,14 @@ public class QuarkClient {
 
     public String importAccount(ChainAccount chainAccount) {
         return call("account.import", Lists.newArrayList(AccountAddressUtils.hex(chainAccount.accountAddress()), chainAccount.getPrivateKey(), chainAccount.getPassword().orElse("")));
+    }
+
+    public String getAccount(String address) {
+        return call("account.get", Lists.newArrayList(address));
+    }
+
+    public String listResource(ChainAccount chainAccount) {
+        return call("state.list_resource", Lists.newArrayList(chainAccount.getAddress(), ImmutableMap.of("decode", true)));
     }
 
 //    public void createAccount(Optional<String> pwd) {

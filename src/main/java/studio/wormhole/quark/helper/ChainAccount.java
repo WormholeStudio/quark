@@ -25,6 +25,20 @@ public class ChainAccount {
     Optional<String> password;
 
 
+    public String getAddress() {
+        if (StringUtils.isEmpty(address)) {
+            return AccountAddressUtils.hex(accountAddress());
+        }
+        return address;
+    }
+
+    public Optional getPassword() {
+        if (password == null) {
+            return Optional.empty();
+        }
+        return password;
+    }
+
     public AccountAddress accountAddress() {
         if (StringUtils.isEmpty(address)) {
             Ed25519PrivateKey privateKey = SignatureUtils.strToPrivateKey(getPrivateKey());

@@ -119,6 +119,7 @@ public class ChainService {
     public void call_function(ScriptFunctionObj scriptFunctionObj) {
         String rst = client.callScriptFunction(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), scriptFunctionObj);
 
+        System.out.println(rst);
         JSONObject json = JSON.parseObject(rst);
         if (json.containsKey("error")) {
             throw new RuntimeException(scriptFunctionObj.getFunctionName() + "," + json.getJSONObject("error").toJSONString());
@@ -181,7 +182,6 @@ public class ChainService {
                 .build();
         List<ParamType> rst = resolveFunction(scriptFunctionObj);
         List<Bytes> argsBytes = argsFromString(rst, args);
-        String a = args.get(args.size() - 1);
         dryrun_function(scriptFunctionObj.toBuilder().args(argsBytes).build());
         return Optional.empty();
 
@@ -266,4 +266,25 @@ public class ChainService {
     }
 
 
+    public boolean isAccountExist(String address) {
+        String rst = client.getAccount(address);
+        JSONObject o = JSON.parseObject(rst);
+        return o.getJSONObject("result") != null;
+    }
+
+    public String listResource() {
+        return client.listResource(this.chainAccount);
+    }
+
+    public String toHumanReadTokenAmount(String tokenType, BigInteger amount) {
+        BigInteger scaling = getTokenScalingFactor(tokenType);
+        return new BigDecimal(amount.toString())
+                .divide(new BigDecimal(scaling))
+                .toString();
+
+    }
+
+    public String getResource(String address, String type) {
+        return client.getResource(address,type);
+    }
 }
