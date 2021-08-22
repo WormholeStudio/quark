@@ -8,7 +8,7 @@ import studio.wormhole.quark.command.mobius.command.*;
                 Login.class,
                 GetCoin.class,
                 Info.class,
-                MintVoucher.class,
+//                MintVoucher.class,
                 MintAssets.class,
                 DoAction.class,
                 CommandLine.HelpCommand.class})

@@ -1,16 +1,15 @@
 package studio.wormhole.quark.command.mobius.command;
 
-import org.springframework.stereotype.Component;
 import picocli.CommandLine;
-import studio.wormhole.quark.command.mobius.model.CoinType;
 import studio.wormhole.quark.command.mobius.MobiusService;
+import studio.wormhole.quark.command.mobius.model.CoinType;
 
 import java.util.concurrent.Callable;
 
-@Component
-@CommandLine.Command(name = "mint-voucher",
-        mixinStandardHelpOptions = true,
-        exitCodeOnExecutionException = 44)
+//@Component
+//@CommandLine.Command(name = "mint-voucher",
+//        mixinStandardHelpOptions = true,
+//        exitCodeOnExecutionException = 44)
 public class MintVoucher implements Callable<Integer> {
     @CommandLine.Option(names = {"--store"}, description = "project  path  ", required = false)
     String store;
@@ -28,7 +27,7 @@ public class MintVoucher implements Callable<Integer> {
     public Integer call() throws Exception {
         MobiusService mobiusService = new MobiusService(store, true);
         CoinType type = CoinType.fromString(coinType);
-        mobiusService.mintVoucher(type, amount);
+//        mobiusService.mintVoucher(type, amount);
         return null;
     }
 }

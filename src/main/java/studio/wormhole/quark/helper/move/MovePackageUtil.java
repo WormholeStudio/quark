@@ -12,7 +12,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -190,6 +192,7 @@ public class MovePackageUtil {
                 blackMagic(graph, tmp.getName(), visited, order);
             }
         }
+
         return graph.stream().map(f -> {
             int index = order.indexOf(f.getName()) + 1;
             String pre = String.format("%04d", Integer.valueOf(index));

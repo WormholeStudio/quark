@@ -40,17 +40,17 @@ public class MobiusService {
     @SneakyThrows
     public void login(ChainAccount chainAccount, int chainId) {
         ChainAccount richAccount = null;
-        if (chainId == 254 || chainId==251) {
+        if (chainId == 254 || chainId == 251) {
             richAccount = ChainAccount.builder().privateKey("0x652c5cf20ff93f5717a9ea0dff2d84df2d6afec1026c7a74ed2230afb2415bee").build();
         }
         Config config = Config.builder().chainId(chainId).loginAccount(chainAccount)
                 .richAccount(richAccount)
-                .contractAddress("0xf8af03dd08de49d81e4efd9e24c039cc").build();
+                .contractAddress("0x9553fa700207336dd51ef8b0e4f5a2e7").build();
         String json = JSON.toJSONString(config);
         FileUtils.writeStringToFile(new File(store), json, Charset.defaultCharset());
         chainService = new ChainService(config.getLoginAccount(), config.getChainId());
 
-        if (chainId== 254){
+        if (chainId == 254) {
             if (!chainService.isAccountExist(chainAccount.getAddress())) {
                 System.out.println("address " + chainAccount.getAddress() + " is not exist on chain " + chainId + " ,will create it ......");
                 chainService.importAccount(chainAccount);
@@ -108,7 +108,12 @@ public class MobiusService {
         String resource = chainService.listResource();
 
         printTokenBalance(resource);
-        getVouchers(resource).forEach(voucher -> printVoucher(voucher));
+//        getVouchers(resource).forEach(voucher -> printVoucher(voucher));
+
+
+        Optional<String> hasAssets = chainService.call_function(appendContract("Assets2Gallery::is_accept"), Lists.newArrayList(appendContract("Management::StandardPosition")), Lists.newArrayList(getConfig().getLoginAccount().getAddress()));
+
+//        System.out.println(hasAssets);
         AssetsGallery assetsGallery = getAssets(getConfig().getLoginAccount().getAddress()).get();
 
         printAssetsGalley(assetsGallery);
@@ -184,21 +189,23 @@ public class MobiusService {
                 });
     }
 
-    public void mintVoucher(CoinType type, String amount) {
+//    public void mintVoucher(CoinType type, String amount) {
+//        BigInteger chainTokenAmount = chainService.toChainTokenAmount(
+//                type.getAddress(),
+//                amount);
+//        chainService.call_function(
+//                appendContract("MarketScript::init_assets"),
+//                Lists.newArrayList(type.getAddress()), Lists.newArrayList(chainTokenAmount.toString()));
+//
+//    }
+
+    public void mintAssets(CoinType type, String amount) {
         BigInteger chainTokenAmount = chainService.toChainTokenAmount(
                 type.getAddress(),
                 amount);
         chainService.call_function(
-                appendContract("MarketScript::mint_voucher"),
+                appendContract("MarketScript::init_assets"),
                 Lists.newArrayList(type.getAddress()), Lists.newArrayList(chainTokenAmount.toString()));
-
-    }
-
-    public void mintAssets(long voucherId) {
-        CoinType voucherType = getVoucherType(voucherId);
-        chainService.call_function(
-                appendContract("MarketScript::mint_assets"),
-                Lists.newArrayList(voucherType.getAddress()), Lists.newArrayList(String.valueOf(voucherId)));
 
     }
 
@@ -210,7 +217,7 @@ public class MobiusService {
     }
 
     private Optional<AssetsGallery> getAssets(String address) {
-        String type = "-::Assets2Gallery::AssetsGalleryStore<0x00000000000000000000000000000001::NFT::NFT<-::Assets2::AMeta<-::Management::StandardPosition>, -::Assets2::ABody<-::Treasury2::Assets<-::Management::StandardPosition>>>>";
+        String type = "-::Assets2Gallery::AssetsGalleryStore<0x00000000000000000000000000000001::NFT::NFT<-::Assets2::AMeta<-::Management::StandardPosition>, -::Assets2::ABody<-::Treasury3::Assets<-::Management::StandardPosition>>>>";
         type = type.replaceAll("-", this.config.getContractAddress());
         String rst = chainService.getResource(address, type);
         JSONObject jsonObject = JSON.parseObject(rst);

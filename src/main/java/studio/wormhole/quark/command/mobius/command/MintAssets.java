@@ -3,6 +3,7 @@ package studio.wormhole.quark.command.mobius.command;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import studio.wormhole.quark.command.mobius.MobiusService;
+import studio.wormhole.quark.command.mobius.model.CoinType;
 
 import java.util.concurrent.Callable;
 
@@ -13,16 +14,27 @@ import java.util.concurrent.Callable;
 public class MintAssets implements Callable<Integer> {
     @CommandLine.Option(names = {"--store"}, description = "project  path  ", required = false)
     String store;
-    @CommandLine.Option(names = {"--voucher_id"},
-            description = "voucher id",
+    //    @CommandLine.Option(names = {"--voucher_id"},
+//            description = "voucher id",
+//            required = true)
+//    long voucherId;
+    @CommandLine.Option(names = {"--coin"},
+            description = "coin like stc,mbtc,meth,musdt ",
             required = true)
-    long voucherId;
+    String coinType;
+
+    @CommandLine.Option(names = {"--amount"},
+            description = "human readable amount like 4.567",
+            required = true)
+    String amount;
 
 
     @Override
     public Integer call() throws Exception {
         MobiusService mobiusService = new MobiusService(store, true);
-        mobiusService.mintAssets(voucherId);
+        CoinType type = CoinType.fromString(coinType);
+
+        mobiusService.mintAssets(type,amount);
         return null;
     }
 }

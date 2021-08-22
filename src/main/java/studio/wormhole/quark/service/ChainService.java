@@ -78,6 +78,8 @@ public class ChainService {
 
         String rst = client
                 .batchDeployContractPackage(chainAccount.accountAddress(), chainAccount.ed25519PrivateKey(), fileList, null);
+
+        System.out.println(rst);
         checkTxnResult(rst,
                 "batch  deploy:" + fileList.stream().map(s -> s.getName()).collect(Collectors.joining(",")),
                 client);

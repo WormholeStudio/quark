@@ -41,15 +41,15 @@ public class Deploy implements Callable<Integer> {
     @Option(names = {"--code_address"}, description = "if code address is different from address ,will auto replace and compile ", required = false)
     String replaceAddress;
 
-    @Option(names = {"--function" }, description = "format:  address::module::function_name", required = false)
+    @Option(names = {"--function"}, description = "format:  address::module::function_name", required = false)
     String function;
 
-    @Option(names = {"--type_args" },
+    @Option(names = {"--type_args"},
             description = "type_args,format:  address::module::struct_name split with , ",
             split = ",",
             required = false)
     List<String> type_args;
-    @Option(names = {"--args" },
+    @Option(names = {"--args"},
             description = " args  split with , if array split with whitespace ",
             split = ",", required = false)
     List<String> args;
@@ -81,12 +81,19 @@ public class Deploy implements Callable<Integer> {
             MovePackageUtil.publish(projectPath);
         }
 
-        chainService.batchDeployContract(projectPath, fileName);
-        if (StringUtils.isNotEmpty(replaceAddress)) {
-            MovePackageUtil.replaceAddress(projectPath, address, replaceAddress);
+        try {
+            chainService.batchDeployContract(projectPath, fileName);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (StringUtils.isNotEmpty(replaceAddress)) {
+                MovePackageUtil.replaceAddress(projectPath, address, replaceAddress);
+            }
         }
 
-        if (StringUtils.isNotEmpty(function)){
+
+        if (StringUtils.isNotEmpty(function)) {
             chainService.call_function(function, type_args, args);
         }
         return 0;
