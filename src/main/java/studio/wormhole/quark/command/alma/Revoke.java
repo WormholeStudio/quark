@@ -17,7 +17,7 @@ public class Revoke implements Callable<Integer> {
     String privateKeyStr;
     @CommandLine.Option(names = {"--chain"}, description = "chain id :localhost=254 ,main=1 ,barnard=251", defaultValue = "0", required = true)
     int chainId;
-    @CommandLine.Option(names = {"--token_type"}, description = "token type", required = false)
+    @CommandLine.Option(names = {"--token_type"}, description = "token type", required = true)
     String token_type;
     @CommandLine.Option(names = {"--function_address"}, description = "function address", required = false)
     String functionAddress;
