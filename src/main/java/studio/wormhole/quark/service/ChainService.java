@@ -56,6 +56,11 @@ public class ChainService {
         this.chainInfo = chainInfo(chainId);
         this.chainAccount = chainAccount;
         this.client = getClient(chainInfo.getChainId(), null);
+        if ((chainId > 1 && chainId < 250) || chainId == 254) {
+            if(!isAccountExist(chainAccount.getAddress())){
+                importAccount(chainAccount);
+            }
+        }
     }
 
     RetryTemplate template = RetryTemplate.builder()
@@ -86,7 +91,6 @@ public class ChainService {
     }
 
     private QuarkClient getClient(int chainId, Ed25519PrivateKey privateKey) {
-
         return new QuarkClient(chainInfo(chainId));
     }
 

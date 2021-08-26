@@ -11,9 +11,9 @@ import java.util.Optional;
 public enum CoinType {
 
     STC("STC", "0x00000000000000000000000000000001::STC::STC"),
-    MBTC("MBTC", "0xf8af03dd08de49d81e4efd9e24c039cc::MBTC::MBTC"),
-    METH("METH", "0xf8af03dd08de49d81e4efd9e24c039cc::METH::METH"),
-    MUSDT("MUSDT", "0xf8af03dd08de49d81e4efd9e24c039cc::MUSDT::MUSDT"),
+    MBTC("MBTC", "0x6a4d60e09c3d60d7260b1ca9a5e0cc4e::MBTC::MBTC"),
+    METH("METH", "0x6a4d60e09c3d60d7260b1ca9a5e0cc4e::METH::METH"),
+    MUSDT("MUSDT", "0x6a4d60e09c3d60d7260b1ca9a5e0cc4e::MUSDT::MUSDT"),
 
     ;
     private String name;
