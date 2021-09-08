@@ -40,7 +40,7 @@ public class MobiusService {
     @SneakyThrows
     public void login(ChainAccount chainAccount, int chainId) {
         ChainAccount richAccount = null;
-        if (chainId == 254 || chainId == 251) {
+        if (chainId == 254 || chainId == 251 || chainId ==253 ) {
             richAccount = ChainAccount.builder().privateKey("0x652c5cf20ff93f5717a9ea0dff2d84df2d6afec1026c7a74ed2230afb2415bee").build();
         }
         Config config = Config.builder().chainId(chainId).loginAccount(chainAccount)

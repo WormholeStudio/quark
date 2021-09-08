@@ -129,9 +129,9 @@ public class QuarkClient {
             try {
                 contractBytes = Files.toByteArray(new File(file.getMvFilePath()));
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(file.getMvFilePath() + "," + e.getLocalizedMessage());
             }
-            org.starcoin.types.Module module = new org.starcoin.types.Module(new Bytes(contractBytes));
+            Module module = new Module(new Bytes(contractBytes));
             return module;
         }).collect(Collectors.toList());
         org.starcoin.types.Package contractPackage = new org.starcoin.types.Package(sender,
