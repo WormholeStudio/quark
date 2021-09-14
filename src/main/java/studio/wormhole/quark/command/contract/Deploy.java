@@ -44,6 +44,9 @@ public class Deploy implements Callable<Integer> {
     @Option(names = {"--function"}, description = "format:  address::module::function_name", required = false)
     String function;
 
+    @Option(names = {"--starcoin-rpc"}, description = "starcoin-rpc", required = false)
+    String starcoinRpc;
+
     @Option(names = {"--type_args"},
             description = "type_args,format:  address::module::struct_name split with , ",
             split = ",",
@@ -78,7 +81,7 @@ public class Deploy implements Callable<Integer> {
 
         if (StringUtils.isNotEmpty(replaceAddress)) {
             MovePackageUtil.replaceAddress(projectPath, replaceAddress, address);
-            MovePackageUtil.publish(projectPath);
+            MovePackageUtil.publish(projectPath, starcoinRpc);
         }
 
         try {

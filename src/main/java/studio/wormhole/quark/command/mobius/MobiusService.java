@@ -40,12 +40,12 @@ public class MobiusService {
     @SneakyThrows
     public void login(ChainAccount chainAccount, int chainId) {
         ChainAccount richAccount = null;
-        if (chainId == 254 || chainId == 251 || chainId ==253 ) {
+        if (chainId == 254 || chainId == 251 || chainId == 253) {
             richAccount = ChainAccount.builder().privateKey("0x652c5cf20ff93f5717a9ea0dff2d84df2d6afec1026c7a74ed2230afb2415bee").build();
         }
         Config config = Config.builder().chainId(chainId).loginAccount(chainAccount)
                 .richAccount(richAccount)
-                .contractAddress("0x6a4d60e09c3d60d7260b1ca9a5e0cc4e").build();
+                .contractAddress("0xe472F1a11f9E16e84f5Afc717608a0e0").build();
         String json = JSON.toJSONString(config);
         FileUtils.writeStringToFile(new File(store), json, Charset.defaultCharset());
         chainService = new ChainService(config.getLoginAccount(), config.getChainId());
@@ -111,9 +111,8 @@ public class MobiusService {
 //        getVouchers(resource).forEach(voucher -> printVoucher(voucher));
 
 
-        Optional<String> hasAssets = chainService.call_function(appendContract("Assets2Gallery::is_accept"), Lists.newArrayList(appendContract("Management::StandardPosition")), Lists.newArrayList(getConfig().getLoginAccount().getAddress()));
+        Optional<String> hasAssets = chainService.call_function(appendContract("AssetsGallery::is_accept"), Lists.newArrayList(appendContract("Management::StandardPosition")), Lists.newArrayList(getConfig().getLoginAccount().getAddress()));
 
-//        System.out.println(hasAssets);
         AssetsGallery assetsGallery = getAssets(getConfig().getLoginAccount().getAddress()).get();
 
         printAssetsGalley(assetsGallery);
@@ -126,12 +125,15 @@ public class MobiusService {
             item.getBody().getAssets().getCollateral().forEach(e -> {
                 String tokenType = e.getToken_code().toAddress();
                 String amount = chainService.toHumanReadTokenAmount(tokenType, e.getToken_amount());
-                System.out.println("\t\t" + e.getToken_code().getName() + " 存款:" + amount + ",利息:" + e.getInterest());
+                String interest = chainService.toHumanReadTokenAmount(tokenType, e.getInterest());
+                System.out.println("\t\t" + e.getToken_code().getName() + " 存款:" + amount + ",利息:" + interest);
             });
             item.getBody().getAssets().getDebt().forEach(e -> {
                 String tokenType = e.getToken_code().toAddress();
                 String amount = chainService.toHumanReadTokenAmount(tokenType, e.getToken_amount());
-                System.out.println("\t\t" + e.getToken_code().getName() + " 贷款:" + amount + ",利息:" + e.getInterest());
+                String interest = chainService.toHumanReadTokenAmount(tokenType, e.getInterest());
+
+                System.out.println("\t\t" + e.getToken_code().getName() + " 借款款:" + amount + ",利息:" + interest);
             });
         });
     }
@@ -217,7 +219,7 @@ public class MobiusService {
     }
 
     private Optional<AssetsGallery> getAssets(String address) {
-        String type = "-::Assets2Gallery::AssetsGalleryStore<0x00000000000000000000000000000001::NFT::NFT<-::Assets2::AMeta<-::Management::StandardPosition>, -::Assets2::ABody<-::Treasury3::Assets<-::Management::StandardPosition>>>>";
+        String type = "-::AssetsGallery::AssetsGalleryStore<0x00000000000000000000000000000001::NFT::NFT<-::Assets::AMeta<-::Management::StandardPosition>, -::Assets::ABody<-::Treasury::Assets<-::Management::StandardPosition>>>>";
         type = type.replaceAll("-", this.config.getContractAddress());
         String rst = chainService.getResource(address, type);
         JSONObject jsonObject = JSON.parseObject(rst);

@@ -31,10 +31,14 @@ public class MovePackageUtil {
     private static Pattern p = Pattern.compile("use\\s+(0x[a-f0-9A-F]+?)::([\\x00-\\xff]+?);");
     private static Pattern m = Pattern.compile("\\s*module\\s+([\"\\w- ]*)\\{");
 
-    public static void publish(String src) {
+    public static void publish(String src, String starcoinRpc) {
         Process process;
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"/bin/sh", "-c", "move clean && move publish"});
+            String cmd = "move clean && move publish";
+            if (StringUtils.isNotEmpty(starcoinRpc)) {
+                cmd = "move clean &&move check  --mode starcoin --starcoin-rpc " + starcoinRpc + "  && move publish   ";
+            }
+            ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"/bin/sh", "-c", cmd});
             processBuilder.directory(new File(src));
             processBuilder.redirectErrorStream(true);
             process = processBuilder.start();
@@ -71,11 +75,7 @@ public class MovePackageUtil {
 
 
         Map<String, List<MoveFile>> moveFilesGroup = buildMoveFilesGroup(src);
-        if (moveFilesGroup.get("src").size() != moveFilesGroup.get("storage").size()) {
-            return moveFilesGroup.get("storage").stream()
-                    .map(s -> s.toBuilder().mvFilePath(s.srcFilePath).build()).collect(
-                            Collectors.toList());
-        }
+
 
         List<MoveFile> srcFiles = sort(moveFilesGroup.get("src"));
         Map<String, String> mvFilesMap = moveFilesGroup.get("storage").stream()
@@ -170,7 +170,9 @@ public class MovePackageUtil {
             depSet = Lists.newArrayList();
         }
         for (String neighborId : depSet) {
-
+            if (!visited.containsKey(neighborId)) {
+                continue;
+            }
             if (!visited.get(neighborId)) {
                 blackMagic(graph, neighborId, visited, order);
             }
