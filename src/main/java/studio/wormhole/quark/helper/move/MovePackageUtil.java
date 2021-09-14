@@ -85,7 +85,9 @@ public class MovePackageUtil {
         List<MoveFile> files = srcFiles.stream().map(s -> {
                     String mvName = s.getName().replace(".move", ".mv");
                     return s.toBuilder().mvFilePath(mvFilesMap.get(mvName)).build();
-                }).sorted((o1, o2) -> StringUtils.compare(o1.getOrderName(), o2.getOrderName()))
+                })
+                .filter(s->!s.getSrcFilePath().contains("src/dep/"))
+                .sorted((o1, o2) -> StringUtils.compare(o1.getOrderName(), o2.getOrderName()))
                 .collect(Collectors.toList());
         return files;
     }
