@@ -128,8 +128,8 @@ public class QuarkClient {
             byte[] contractBytes;
             try {
                 contractBytes = Files.toByteArray(new File(file.getMvFilePath()));
-            } catch (IOException e) {
-                throw new RuntimeException(file.getMvFilePath() + "," + e.getLocalizedMessage());
+            } catch (Exception e) {
+                throw new RuntimeException(file.getSrcFilePath() + "," + file.getOrderName() + "," + e.getLocalizedMessage());
             }
             org.starcoin.types.Module module = new org.starcoin.types.Module(new Bytes(contractBytes));
             return module;
@@ -190,7 +190,7 @@ public class QuarkClient {
             }
             RawUserTransaction rawUserTransaction = new RawUserTransaction(sender, seqNumber.longValue(),
                     payload,
-                    10000000L, 1L, "0x1::STC::STC",
+                    40000000L, 1L, "0x1::STC::STC",
                     ts + TimeUnit.HOURS.toSeconds(1L), chainId);
 //
             String dryRunHexTransaction = dryRunHexTransaction(rawUserTransaction, publicKey);

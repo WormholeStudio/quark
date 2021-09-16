@@ -45,7 +45,7 @@ public class MobiusService {
         }
         Config config = Config.builder().chainId(chainId).loginAccount(chainAccount)
                 .richAccount(richAccount)
-                .contractAddress("0xe472F1a11f9E16e84f5Afc717608a0e0").build();
+                .contractAddress("0x4d60a256bf4d6c012bb47caa06876b7d").build();
         String json = JSON.toJSONString(config);
         FileUtils.writeStringToFile(new File(store), json, Charset.defaultCharset());
         chainService = new ChainService(config.getLoginAccount(), config.getChainId());
@@ -105,17 +105,17 @@ public class MobiusService {
     public void printLoginInfo() {
         System.out.println("chain:" + getConfig().getChainId());
         System.out.println("current login:" + getConfig().getLoginAccount().getAddress());
+
+
         String resource = chainService.listResource();
-
         printTokenBalance(resource);
-//        getVouchers(resource).forEach(voucher -> printVoucher(voucher));
-
-
         Optional<String> hasAssets = chainService.call_function(appendContract("AssetsGallery::is_accept"), Lists.newArrayList(appendContract("Management::StandardPosition")), Lists.newArrayList(getConfig().getLoginAccount().getAddress()));
-
         AssetsGallery assetsGallery = getAssets(getConfig().getLoginAccount().getAddress()).get();
-
         printAssetsGalley(assetsGallery);
+    }
+
+    private void printOracle(String address, String tokenPair) {
+        chainService.call_function("0x1::PriceOracle::read", Lists.newArrayList(tokenPair), Lists.newArrayList(address));
     }
 
     private void printAssetsGalley(AssetsGallery assetsGallery) {
