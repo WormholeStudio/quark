@@ -20,7 +20,6 @@ import studio.wormhole.quark.helper.move.MoveFile;
 import studio.wormhole.quark.model.ChainInfo;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
@@ -38,7 +37,9 @@ public class QuarkClient {
             "application/json; charset=utf-8");
     private final String baseUrl;
     private final int chainId;
-    private OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+    private static final CacheControl cacheControl = new CacheControl.Builder().maxAge(5, TimeUnit.SECONDS).build();
+    private OkHttpClient okHttpClient = new OkHttpClient.Builder()
+            .build();
 
     public QuarkClient(ChainInfo chainInfo) {
         this.chainInfo = chainInfo;
@@ -59,7 +60,7 @@ public class QuarkClient {
         jsonBody.put("id", UUID.randomUUID().toString());
         jsonBody.put("params", params);
         RequestBody body = RequestBody.create(JSON_MEDIA_TYPE, jsonBody.toString());
-        Request request = new Request.Builder().post(body).url(this.baseUrl).build();
+        Request request = new Request.Builder().cacheControl(cacheControl).post(body).url(this.baseUrl).build();
         Response response = okHttpClient.newCall(request).execute();
         String rst = response.body().string();
         return rst;
@@ -199,7 +200,10 @@ public class QuarkClient {
             String status = result.getString("status");
             log.debug("dry_run:" + status);
             if (!"Executed".equalsIgnoreCase(status)) {
-                throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
+                System.out.println(
+                        result.getJSONObject("explained_status").toJSONString()
+                );
+//                throw new RuntimeException(result.getJSONObject("explained_status").toJSONString());
             }
             BigInteger gasUsed = result.getBigInteger("gas_used");
 

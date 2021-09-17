@@ -57,7 +57,7 @@ public class ChainService {
         this.chainAccount = chainAccount;
         this.client = getClient(chainInfo.getChainId(), null);
         if ((chainId > 1 && chainId < 250) || chainId == 254) {
-            if(!isAccountExist(chainAccount.getAddress())){
+            if (!isAccountExist(chainAccount.getAddress())) {
                 importAccount(chainAccount);
             }
         }
@@ -244,6 +244,11 @@ public class ChainService {
         return JSON.parseObject(json).getJSONArray("result").getBigInteger(0);
     }
 
+    public BigDecimal getOracleScalingFactor(String oracleType) {
+        String json = call_contract_run("0x1::PriceOracle::get_scaling_factor", Lists.newArrayList(oracleType), Lists.newArrayList());
+        return JSON.parseObject(json).getJSONArray("result").getBigDecimal(0);
+    }
+
     public BigInteger toChainTokenAmount(String tokenType, String amount) {
         BigInteger scaling = getTokenScalingFactor(tokenType);
         return new BigDecimal(amount).multiply(new BigDecimal(scaling)).toBigInteger();
@@ -294,5 +299,10 @@ public class ChainService {
 
     public String getResource(String address, String type) {
         return client.getResource(address, type);
+    }
+
+    public BigDecimal getCoinPrice(String oracleLabel, String address) {
+        String json = call_contract_run("0x1::PriceOracle::read", Lists.newArrayList(oracleLabel), Lists.newArrayList(address));
+        return JSON.parseObject(json).getJSONArray("result").getBigDecimal(0);
     }
 }

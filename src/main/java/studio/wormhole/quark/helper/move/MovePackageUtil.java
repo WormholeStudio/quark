@@ -34,7 +34,7 @@ public class MovePackageUtil {
     public static void publish(String src, String starcoinRpc) {
         Process process;
         try {
-            String cmd = "move clean && move publish";
+            String cmd = "move clean &&move check  && move publish";
             if (StringUtils.isNotEmpty(starcoinRpc)) {
                 cmd = "move clean &&move check  --mode starcoin --starcoin-rpc " + starcoinRpc + "  && move publish   ";
             }

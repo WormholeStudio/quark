@@ -4,21 +4,22 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import studio.wormhole.quark.command.mobius.model.*;
 import studio.wormhole.quark.helper.ChainAccount;
 import studio.wormhole.quark.service.ChainService;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class MobiusService {
@@ -29,11 +30,15 @@ public class MobiusService {
 
     private Config config;
 
+    private RiskService riskService;
+
     public MobiusService(String store, boolean login) {
         this.store = Constants.checkStore(store);
         if (login) {
             Config config = getConfig();
             chainService = new ChainService(config.getLoginAccount(), config.getChainId());
+
+            riskService = new RiskService(config, chainService);
         }
     }
 
@@ -45,7 +50,7 @@ public class MobiusService {
         }
         Config config = Config.builder().chainId(chainId).loginAccount(chainAccount)
                 .richAccount(richAccount)
-                .contractAddress("0x4d60a256bf4d6c012bb47caa06876b7d").build();
+                .contractAddress("0x4fe7BBbFcd97987b966415F01995a229").build();
         String json = JSON.toJSONString(config);
         FileUtils.writeStringToFile(new File(store), json, Charset.defaultCharset());
         chainService = new ChainService(config.getLoginAccount(), config.getChainId());
@@ -112,6 +117,8 @@ public class MobiusService {
         Optional<String> hasAssets = chainService.call_function(appendContract("AssetsGallery::is_accept"), Lists.newArrayList(appendContract("Management::StandardPosition")), Lists.newArrayList(getConfig().getLoginAccount().getAddress()));
         AssetsGallery assetsGallery = getAssets(getConfig().getLoginAccount().getAddress()).get();
         printAssetsGalley(assetsGallery);
+
+
     }
 
     private void printOracle(String address, String tokenPair) {
@@ -122,20 +129,69 @@ public class MobiusService {
         System.out.println("Assets count:" + assetsGallery.getItems().size());
         assetsGallery.getItems().forEach(item -> {
             System.out.println("\tAssets Id:" + item.getId());
-            item.getBody().getAssets().getCollateral().forEach(e -> {
+            Map<CoinType, BigDecimal> oraclePrice = getPrice();
+
+            AtomicReference<BigDecimal> debtSum = new AtomicReference<>(new BigDecimal(0));
+            AtomicReference<BigDecimal> collateralSum = new AtomicReference<>(new BigDecimal(0));
+            item.getBody().getAssets().getCollateral().parallelStream().forEach(e -> {
                 String tokenType = e.getToken_code().toAddress();
                 String amount = chainService.toHumanReadTokenAmount(tokenType, e.getToken_amount());
                 String interest = chainService.toHumanReadTokenAmount(tokenType, e.getInterest());
-                System.out.println("\t\t" + e.getToken_code().getName() + " 存款:" + amount + ",利息:" + interest);
+                BigDecimal amountLt = getRiskEquivalentsConfig(CoinType.fromString(e.getToken_code().getName()))
+                        .map(s -> {
+                            BigInteger scaling = chainService.getTokenScalingFactor(tokenType);
+                            BigInteger lt = s.getLiquidationThreshold();
+                            BigInteger tokenAmount = e.getToken_amount();
+                            BigDecimal price = oraclePrice.get(s.getCoinType());
+                            return price.multiply(
+                                            new BigDecimal(tokenAmount)
+                                                    .add(new BigDecimal(e.getInterest()))
+                                                    .divide(new BigDecimal(scaling))
+                                    )
+                                    .multiply(new BigDecimal(lt)).divide(new BigDecimal("10000"));
+                        }).orElse(new BigDecimal(0));
+                collateralSum.accumulateAndGet(amountLt, (bigDecimal, bigDecimal2) -> bigDecimal.add(bigDecimal2));
+
+                System.out.println("\t\t" + e.getToken_code().getName() + " 存款:" + amount + ",利息:" + e.getInterest() + ", 抵押物价值:" + amountLt.toString());
+
             });
-            item.getBody().getAssets().getDebt().forEach(e -> {
+            System.out.println("\t\t----负债----");
+            item.getBody().getAssets().getDebt().parallelStream().forEach(e -> {
                 String tokenType = e.getToken_code().toAddress();
                 String amount = chainService.toHumanReadTokenAmount(tokenType, e.getToken_amount());
                 String interest = chainService.toHumanReadTokenAmount(tokenType, e.getInterest());
 
-                System.out.println("\t\t" + e.getToken_code().getName() + " 借款款:" + amount + ",利息:" + interest);
+                BigInteger scaling = chainService.getTokenScalingFactor(tokenType);
+                BigInteger tokenAmount = e.getToken_amount();
+                BigDecimal price = oraclePrice.get(CoinType.fromString(e.getToken_code().getName()));
+                BigDecimal value = price.multiply(
+                        new BigDecimal(tokenAmount).add(new BigDecimal(e.getInterest()))
+                                .divide(new BigDecimal(scaling)));
+                debtSum.accumulateAndGet(value, (bigDecimal, bigDecimal2) -> bigDecimal.add(bigDecimal2));
+                System.out.println("\t\t" + e.getToken_code().getName() + " 借款款:" + amount + ",利息:" + interest + ",负债价值:" + value.toString());
+
             });
+            BigDecimal debt = debtSum.get();
+            BigDecimal coll = collateralSum.get();
+            if (debt.compareTo(new BigDecimal(0)) == 0) {
+                System.out.println("\t资金使用率: 0");
+            } else {
+                System.out.println("\t资金使用率:" + debt.divide(coll, 10, BigDecimal.ROUND_HALF_UP));
+            }
         });
+
+
+    }
+
+    private Map<CoinType, BigDecimal> getPrice() {
+        Map<CoinType, BigDecimal> rst = Arrays.stream(CoinType.values()).parallel()
+                .filter(s -> StringUtils.isNotEmpty(s.getOracleLabel())).map(coinType -> {
+                    BigDecimal scaling = chainService.getOracleScalingFactor(coinType.getOracleLabel());
+                    BigDecimal price = chainService.getCoinPrice(coinType.getOracleLabel(), "0x07fa08a855753f0ff7292fdcbe871216");
+                    return Maps.immutableEntry(coinType, price.divide(scaling));
+                }).collect(Collectors.toMap(s -> s.getKey(), s -> s.getValue()));
+        rst.put(CoinType.MUSDT, new BigDecimal(1));
+        return rst;
     }
 
 
@@ -180,7 +236,7 @@ public class MobiusService {
                 .getJSONObject("result")
                 .getJSONObject("resources")
                 .entrySet()
-                .stream()
+                .parallelStream()
                 .filter(s -> s.getKey().startsWith("0x00000000000000000000000000000001::Account::Balance"))
                 .filter(s -> CoinType.fromBalanceKey(s.getKey()).isPresent())
                 .forEach(s -> {
@@ -191,15 +247,6 @@ public class MobiusService {
                 });
     }
 
-//    public void mintVoucher(CoinType type, String amount) {
-//        BigInteger chainTokenAmount = chainService.toChainTokenAmount(
-//                type.getAddress(),
-//                amount);
-//        chainService.call_function(
-//                appendContract("MarketScript::init_assets"),
-//                Lists.newArrayList(type.getAddress()), Lists.newArrayList(chainTokenAmount.toString()));
-//
-//    }
 
     public void mintAssets(CoinType type, String amount) {
         BigInteger chainTokenAmount = chainService.toChainTokenAmount(
@@ -250,6 +297,33 @@ public class MobiusService {
                 appendContract(action.getFunction()),
                 Lists.newArrayList(type.getAddress()), Lists.newArrayList(voucherId.toString(), chainTokenAmount.toString()));
 
+    }
+
+
+    public Optional<RiskAssetsConfig> getRiskAssetsConfig() {
+        String type = "-::Risk::AssetsConfig<-::Management::StandardPosition>";
+        type = type.replaceAll("-", this.config.getContractAddress());
+        String rst = chainService.getResource(this.config.getContractAddress(), type);
+        JSONObject jsonObject = JSON.parseObject(rst);
+        if (jsonObject.getJSONObject("result") == null) {
+            return Optional.empty();
+        }
+        BigInteger lt = jsonObject.getJSONObject("result").getJSONObject("json").getJSONObject("liquidation_threshold").getBigInteger("mantissa");
+        RiskAssetsConfig riskAssetsConfig = new RiskAssetsConfig(lt);
+        return Optional.of(riskAssetsConfig);
+    }
+
+    public Optional<RiskEquivalentsConfig> getRiskEquivalentsConfig(CoinType coinType) {
+        String type = "-::Risk::EquivalentsConfig<-::Management::StandardPosition, " + coinType.getAddress() + ">";
+        type = type.replaceAll("-", this.config.getContractAddress());
+        String rst = chainService.getResource(this.config.getContractAddress(), type);
+        JSONObject jsonObject = JSON.parseObject(rst);
+        if (jsonObject.getJSONObject("result") == null) {
+            return Optional.empty();
+        }
+        BigInteger lt = jsonObject.getJSONObject("result").getJSONObject("json").getJSONObject("liquidation_threshold").getBigInteger("mantissa");
+        BigInteger li = jsonObject.getJSONObject("result").getJSONObject("json").getJSONObject("liquidation_incentive").getBigInteger("mantissa");
+        return Optional.of(new RiskEquivalentsConfig(coinType, lt, li));
     }
 }
 
