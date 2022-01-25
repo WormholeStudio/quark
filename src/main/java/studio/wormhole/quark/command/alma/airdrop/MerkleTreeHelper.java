@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import studio.wormhole.quark.helper.IdentifierUtil;
 
 public class MerkleTreeHelper {
 
@@ -33,6 +34,17 @@ public class MerkleTreeHelper {
           .build();
       recordList.add(csvRecord);
     }
+
+    recordList = recordList.stream().map(record -> {
+      if (record.getAddress().startsWith("stc")) {
+        CSVRecord csvRecord = CSVRecord.builder()
+            .address(IdentifierUtil.identifierToAddress(record.getAddress()))
+            .amount(record.getAmount())
+            .build();
+        return csvRecord;
+      }
+      return record;
+    }).collect(Collectors.toList());
     Map<String, CSVRecord> maps = Streams
         .mapWithIndex(recordList.stream(), new FunctionWithIndex<CSVRecord, Entry>() {
           @SneakyThrows

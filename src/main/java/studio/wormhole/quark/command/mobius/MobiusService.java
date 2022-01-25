@@ -50,7 +50,7 @@ public class MobiusService {
         }
         Config config = Config.builder().chainId(chainId).loginAccount(chainAccount)
                 .richAccount(richAccount)
-                .contractAddress("0x4fe7BBbFcd97987b966415F01995a229").build();
+                .contractAddress("0xC4aBC72D4054ffdA2189fc99f69bAf76").build();
         String json = JSON.toJSONString(config);
         FileUtils.writeStringToFile(new File(store), json, Charset.defaultCharset());
         chainService = new ChainService(config.getLoginAccount(), config.getChainId());
